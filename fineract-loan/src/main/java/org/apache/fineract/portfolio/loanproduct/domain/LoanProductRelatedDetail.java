@@ -19,12 +19,14 @@
 package org.apache.fineract.portfolio.loanproduct.domain;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
@@ -152,6 +154,12 @@ public class LoanProductRelatedDetail implements LoanProductMinimumRepaymentSche
 
     @Column(name = "enable_accrual_activity_posting", nullable = false)
     private boolean enableAccrualActivityPosting = false;
+
+    @ElementCollection
+    @Enumerated(EnumType.STRING)
+    @Column(name = "supported_interest_refund_types", nullable = false)
+    private List<LoanRefundType> supportedInterestRefundTypes = List.of();
+
 
     public static LoanProductRelatedDetail createFrom(final MonetaryCurrency currency, final BigDecimal principal,
             final BigDecimal nominalInterestRatePerPeriod, final PeriodFrequencyType interestRatePeriodFrequencyType,
