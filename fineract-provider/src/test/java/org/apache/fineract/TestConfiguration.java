@@ -68,6 +68,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -147,6 +148,14 @@ public class TestConfiguration {
         return new TenantDatabaseStateVerifier(liquibaseProperties, databaseIndependentQueryService, databaseTypeResolver);
     }
 
+    @Bean
+    public ThreadPoolTaskExecutor tenantUpgradeThreadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+        threadPoolTaskExecutor.setCorePoolSize(1);
+        threadPoolTaskExecutor.setMaxPoolSize(1);
+        return threadPoolTaskExecutor;
+    }
+
     /**
      * Override TenantDatabaseUpgradeService binding, because the real one has a @PostConstruct upgradeAllTenants()
      * which accesses the database on start-up.
@@ -155,10 +164,11 @@ public class TestConfiguration {
     public TenantDatabaseUpgradeService tenantDatabaseUpgradeService(TenantDetailsService tenantDetailsService,
             HikariDataSource tenantDataSource, TenantDatabaseStateVerifier tenantDatabaseStateVerifier,
             ExtendedSpringLiquibaseFactory liquibaseFactory, TenantDataSourceFactory tenantDataSourceFactory,
-            FineractProperties fineractProperties, Environment environment,
+            FineractProperties fineractProperties, Environment environment, ThreadPoolTaskExecutor tenantUpgradeThreadPoolTaskExecutor,
             List<CustomTaskChange> customTaskChangesForDependencyInjection) {
         return new TenantDatabaseUpgradeService(tenantDetailsService, tenantDataSource, fineractProperties, tenantDatabaseStateVerifier,
-                liquibaseFactory, tenantDataSourceFactory, environment, customTaskChangesForDependencyInjection);
+                liquibaseFactory, tenantDataSourceFactory, environment, tenantUpgradeThreadPoolTaskExecutor,
+                customTaskChangesForDependencyInjection);
     }
 
     /**

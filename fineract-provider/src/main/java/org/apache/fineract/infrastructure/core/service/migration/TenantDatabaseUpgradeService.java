@@ -21,10 +21,15 @@ package org.apache.fineract.infrastructure.core.service.migration;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import javax.sql.DataSource;
+import liquibase.Scope;
+import liquibase.ThreadLocalScopeManager;
 import liquibase.change.custom.CustomTaskChange;
 import liquibase.exception.LiquibaseException;
 import liquibase.integration.spring.SpringLiquibase;
@@ -37,6 +42,7 @@ import org.apache.fineract.infrastructure.core.service.tenant.TenantDetailsServi
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 /**
@@ -60,6 +66,8 @@ public class TenantDatabaseUpgradeService implements InitializingBean {
     private final ExtendedSpringLiquibaseFactory liquibaseFactory;
     private final TenantDataSourceFactory tenantDataSourceFactory;
     private final Environment environment;
+    @Qualifier("tenantUpgradeThreadPoolTaskExecutor")
+    private final ThreadPoolTaskExecutor tenantUpgradeTaskExecutor;
 
     // DO NOT REMOVE! Required for liquibase custom task initialization
     private final List<CustomTaskChange> customTaskChangesForDependencyInjection;
@@ -76,6 +84,7 @@ public class TenantDatabaseUpgradeService implements InitializingBean {
             }
         }
         try {
+            Scope.setScopeManager(new ThreadLocalScopeManager());
             upgradeTenantStore();
             upgradeIndividualTenants();
         } catch (LiquibaseException e) {
@@ -121,13 +130,27 @@ public class TenantDatabaseUpgradeService implements InitializingBean {
 
     }
 
-    private void upgradeIndividualTenants() throws LiquibaseException {
+    private void upgradeIndividualTenants() {
         log.info("Upgrading all tenants");
         List<FineractPlatformTenant> tenants = tenantDetailsService.findAllTenants();
+        List<Future<String>> futures = new ArrayList<>();
         if (isNotEmpty(tenants)) {
             for (FineractPlatformTenant tenant : tenants) {
-                upgradeIndividualTenant(tenant);
+                futures.add(tenantUpgradeTaskExecutor.submit(() -> {
+                    upgradeIndividualTenant(tenant);
+                    return tenant.getName();
+                }));
             }
+        }
+
+        try {
+            for (Future<String> future : futures) {
+                future.get();
+            }
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new RuntimeException(exception);
+        } finally {
+            tenantUpgradeTaskExecutor.shutdown();
         }
         log.info("Tenant upgrades have finished");
     }
