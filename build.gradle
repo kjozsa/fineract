@@ -1,4 +1,4 @@
-    /**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -106,7 +106,7 @@ plugins {
     //    id 'org.asciidoctor.jvm.gems' version '3.3.2' apply false
     id 'org.asciidoctor.kindlegen.base' version '3.2.0' apply false
     id 'com.google.cloud.tools.jib' version '3.4.3' apply false
-    id 'org.sonarqube' version '4.4.1.3373'
+    id 'org.sonarqube' version '4.4.1.3373' apply false
     id 'com.github.andygoossens.modernizer' version '1.9.3' apply false
     // TODO: upgrade to 6.0.4
     id 'com.github.spotbugs' version '6.0.22' apply false
@@ -325,7 +325,6 @@ configure(project.fineractJavaProjects) {
 
     apply plugin: 'java'
     apply plugin: 'idea'
-    apply plugin: 'eclipse'
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'net.ltgt.errorprone'
@@ -804,5 +803,12 @@ task printSourceSetInformation() {
             }
             println ""
         }
+    }
+}
+
+if ('sonarqube' in gradle.startParameter.taskNames) {
+    apply plugin: 'org.sonarqube'
+    tasks.named('sonarqube') {
+        dependsOn build
     }
 }
