@@ -925,6 +925,8 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                 addToTransactionMapping(loanTransactionToRepaymentScheduleMapping, portion, zero, zero, zero);
             }
         }
+
+        currentInstallment.checkIfRepaymentPeriodObligationsAreMet(transactionDate, loanTransaction.getLoan().loanCurrency());
         return portion;
     }
 
@@ -1347,7 +1349,12 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                                                     ? inAdvanceInstallment.getFromDate()
                                                     : transactionDate;
                                         }
-                                        case TILL_REST_FREQUENCY_DATE -> inAdvanceInstallment.getDueDate();
+                                        case TILL_REST_FREQUENCY_DATE -> {
+                                            LocalDate transactionDate = loanTransaction.getTransactionDate();
+                                            yield inAdvanceInstallment.getFromDate().isAfter(transactionDate)
+                                                    ? inAdvanceInstallment.getFromDate()
+                                                    : inAdvanceInstallment.getDueDate();
+                                        }
                                         case NONE ->
                                             throw new IllegalStateException("Unexpected PreClosureInterestCalculationStrategy: NONE");
                                     };
@@ -1368,24 +1375,16 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                                             transactionAmountUnprocessed, loanTransactionToRepaymentScheduleMapping,
                                             inAdvanceInstallmentCharges, balances, LoanRepaymentScheduleInstallment.PaymentAction.PAY);
 
-                                    switch (paymentAllocationType) {
-                                        case IN_ADVANCE_PRINCIPAL -> {
-                                            Money balance = switch (strategy) {
-                                                case TILL_PRE_CLOSURE_DATE -> payableDetails.getOutstandingBalance();
-                                                case TILL_REST_FREQUENCY_DATE -> payableDetails.getRemainingBalance();
-                                                default -> throw new IllegalStateException();
-                                            };
-                                            emiCalculator.addBalanceCorrection(model, payDate, balance.multipliedBy(-1));
-                                            emiCalculator.addBalanceCorrection(model, payDate,
-                                                    payableDetails.getPrincipalDue().minus(paidPortion));
-                                        }
-                                        case IN_ADVANCE_INTEREST -> {
-                                            emiCalculator.addBalanceCorrection(model, payDate,
-                                                    payableDetails.getInterestDue().minus(paidPortion));
-                                        }
-                                        default -> {
-                                        }
+                                    if (PaymentAllocationType.IN_ADVANCE_PRINCIPAL == paymentAllocationType) {
+                                        emiCalculator.addBalanceCorrection(model, payDate, paidPortion.multipliedBy(-1));
                                     }
+
+                                    // re-update installment from model
+                                    ProgressiveLoanInterestRepaymentModel modelPeriod = emiCalculator
+                                            .findInterestRepaymentPeriod(model, inAdvanceInstallment.getDueDate()).orElseThrow();
+                                    inAdvanceInstallment.updatePrincipal(modelPeriod.getPrincipalDue().getAmount());
+                                    inAdvanceInstallment.updateInterestCharged(modelPeriod.getInterestDue().getAmount());
+
                                 } else {
                                     // Adjust the portion for the last installment
                                     if (inAdvanceInstallment.equals(inAdvanceInstallments.get(numberOfInstallments - 1))) {

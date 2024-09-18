@@ -479,6 +479,21 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
         TestContext.INSTANCE.set(TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_DOWNPAYMENT_ADV_PMT_ALLOC_FIXED_LENGTH,
                 responseLoanProductsRequestDownPaymentAdvPmtAllocFixedLength);
 
+        LoanProductPaymentAllocationRule.AllocationTypesEnum[] interestBeforePrincipalAllocationRules = List
+                .of(LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_PENALTY, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_FEE, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_INTEREST, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_PRINCIPAL, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_PENALTY, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_FEE, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_INTEREST, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_PRINCIPAL, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_PENALTY, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_FEE, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_INTEREST, //
+                        LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_PRINCIPAL //
+                ).toArray(new LoanProductPaymentAllocationRule.AllocationTypesEnum[] {});
+
         // LP2 with progressive loan schedule + horizontal + interest EMI + 360/30
         // + interest recalculation, preClosureInterestCalculationStrategy= till preclose,
         // interestRecalculationCompoundingMethod = none
@@ -497,15 +512,44 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 .recalculationRestFrequencyType(2)//
                 .recalculationRestFrequencyInterval(1)//
                 .paymentAllocation(List.of(//
-                        createPaymentAllocation("DEFAULT", "NEXT_INSTALLMENT"), //
-                        createPaymentAllocation("GOODWILL_CREDIT", "LAST_INSTALLMENT"), //
-                        createPaymentAllocation("MERCHANT_ISSUED_REFUND", "REAMORTIZATION"), //
-                        createPaymentAllocation("PAYOUT_REFUND", "NEXT_INSTALLMENT")));//
-        Response<PostLoanProductsResponse> responseLoanProductsRequestLP2AdvancedpaymentInterest36030InterestRecalcTillPreCloese = loanProductsApi
+                        createPaymentAllocation("DEFAULT", "NEXT_INSTALLMENT", interestBeforePrincipalAllocationRules), //
+                        createPaymentAllocation("GOODWILL_CREDIT", "LAST_INSTALLMENT", interestBeforePrincipalAllocationRules), //
+                        createPaymentAllocation("MERCHANT_ISSUED_REFUND", "REAMORTIZATION", interestBeforePrincipalAllocationRules), //
+                        createPaymentAllocation("PAYOUT_REFUND", "NEXT_INSTALLMENT", interestBeforePrincipalAllocationRules)));//
+        Response<PostLoanProductsResponse> responseLoanProductsRequestLP2AdvancedpaymentInterest36030InterestRecalcTillPreClose = loanProductsApi
                 .createLoanProduct(loanProductsRequestLP2AdvancedpaymentInterestEmi36030InterestRecalcTillPreclose).execute();
         TestContext.INSTANCE.set(
                 TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALCULATION_TILL_PRECLOSE,
-                responseLoanProductsRequestLP2AdvancedpaymentInterest36030InterestRecalcTillPreCloese);
+                responseLoanProductsRequestLP2AdvancedpaymentInterest36030InterestRecalcTillPreClose);
+
+        // LP2 with progressive loan schedule + horizontal + interest EMI + 360/30
+        // + interest recalculation, preClosureInterestCalculationStrategy= till rest frequency,
+        // interestRecalculationCompoundingMethod = none
+        // Frequency for recalculate Outstanding Principal: Daily, Frequency Interval for recalculation: 1
+        // (LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALCULATION_TILL_REST_FREQUENCY)
+        String name39 = DefaultLoanProduct.LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALCULATION_TILL_REST_FREQUENCY.getName();
+        PostLoanProductsRequest loanProductsRequestLP2AdvancedpaymentInterestEmi36030InterestRecalcTillRestFrequency = loanProductsRequestFactory
+                .defaultLoanProductsRequestLP2Emi()//
+                .name(name39)//
+                .daysInYearType(DaysInYearType.DAYS360.value)//
+                .daysInMonthType(DaysInMonthType.DAYS30.value)//
+                .isInterestRecalculationEnabled(true)//
+                .preClosureInterestCalculationStrategy(2)//
+                .rescheduleStrategyMethod(4)//
+                .interestRecalculationCompoundingMethod(0)//
+                .recalculationRestFrequencyType(2)//
+                .recalculationRestFrequencyInterval(1)//
+                .paymentAllocation(List.of(//
+                        createPaymentAllocation("DEFAULT", "NEXT_INSTALLMENT", interestBeforePrincipalAllocationRules), //
+                        createPaymentAllocation("GOODWILL_CREDIT", "LAST_INSTALLMENT", interestBeforePrincipalAllocationRules), //
+                        createPaymentAllocation("MERCHANT_ISSUED_REFUND", "REAMORTIZATION", interestBeforePrincipalAllocationRules), //
+                        createPaymentAllocation("PAYOUT_REFUND", "NEXT_INSTALLMENT", interestBeforePrincipalAllocationRules) //
+                ));
+        Response<PostLoanProductsResponse> responseLoanProductsRequestLP2AdvancedpaymentInterest36030InterestRecalcTillRestFrequency = loanProductsApi
+                .createLoanProduct(loanProductsRequestLP2AdvancedpaymentInterestEmi36030InterestRecalcTillRestFrequency).execute();
+        TestContext.INSTANCE.set(
+                TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALCULATION_TILL_REST_FREQUENCY,
+                responseLoanProductsRequestLP2AdvancedpaymentInterest36030InterestRecalcTillRestFrequency);
     }
 
     public static AdvancedPaymentData createPaymentAllocation(String transactionType, String futureInstallmentAllocationRule,
