@@ -66,6 +66,10 @@ tasks.register<com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask>("ge
     setOutputDir(file(avroGeneratedSourcesDir))
 }
 
+avro {
+    templateDirectory = "$projectDir/src/main/resources/avro-generator-templates/"
+}
+
 sourceSets {
     main {
         java.srcDir(avroGeneratedSourcesDir)
