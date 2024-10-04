@@ -79,6 +79,10 @@ spotless {
     }
 }
 
+tasks.withType<Checkstyle> {
+    exclude("**")
+}
+
 tasks.named("compileJava") {
     dependsOn("preprocessAvroSchemas", "generateAvroJava", "spotlessJsonApply")
 }
