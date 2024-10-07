@@ -18,11 +18,9 @@
  */
 description = 'Fineract Provider'
 
-apply plugin: 'org.zeroturnaround.gradle.jrebel'
 apply plugin: 'java'
-apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
-apply plugin: 'com.gorylenko.gradle-git-properties'
+//apply plugin: 'com.gorylenko.gradle-git-properties'
 apply plugin: 'io.swagger.core.v3.swagger-gradle-plugin'
 apply plugin: 'com.google.cloud.tools.jib'
 apply plugin: 'se.thinkcode.cucumber-runner'
@@ -88,20 +86,8 @@ configurations {
     }
 }
 
+apply plugin: 'io.freefair.lombok'
 apply from: 'dependencies.gradle'
-
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.postgresql:postgresql'
-    implementation 'org.mariadb.jdbc:mariadb-java-client'
-    implementation 'mysql:mysql-connector-java:8.0.33'
-    // Add other dependencies as needed
-
-    // Driver dependencies for SQL tasks
-    driver 'org.postgresql:postgresql'
-    driver 'org.mariadb.jdbc:mariadb-java-client'
-    driver 'mysql:mysql-connector-java:8.0.33'
-}
 
 modernizer {
     ignoreClassNamePatterns = [
@@ -109,10 +95,6 @@ modernizer {
         '.*EntityTables',
         '.*domain.*'
     ]
-}
-
-if (project.hasProperty('env') && project.env == 'eclipse') {
-    sourceSets.main.java.outputDir = file('bin/main')
 }
 
 sourceSets {
@@ -138,7 +120,7 @@ ext {
     pgPassword = 'postgres'
 }
 
-task createDB {
+tasks.register('createDB') {
     description = 'Creates the MariaDB Database. Needs database name to be passed (e.g., -PdbName=someDBname)'
     doLast {
         def sql = Sql.newInstance('jdbc:mariadb://localhost:3306/', mysqlUser, mysqlPassword, 'org.mariadb.jdbc.Driver')
@@ -146,7 +128,7 @@ task createDB {
     }
 }
 
-task dropDB {
+tasks.register('dropDB') {
     description = 'Drops the specified MariaDB database. Needs database name to be passed (e.g., -PdbName=someDBname)'
     doLast {
         def sql = Sql.newInstance('jdbc:mariadb://localhost:3306/', mysqlUser, mysqlPassword, 'org.mariadb.jdbc.Driver')
@@ -154,7 +136,7 @@ task dropDB {
     }
 }
 
-task createPGDB {
+tasks.register('createPGDB') {
     description = 'Creates the PostgreSQL Database. Needs database name to be passed (e.g., -PdbName=someDBname)'
     doLast {
         def sql = Sql.newInstance('jdbc:postgresql://localhost:5432/', pgUser, pgPassword, 'org.postgresql.Driver')
@@ -162,7 +144,7 @@ task createPGDB {
     }
 }
 
-task dropPGDB {
+tasks.register('dropPGDB') {
     description = 'Drops the specified PostgreSQL database. Needs database name to be passed (e.g., -PdbName=someDBname)'
     doLast {
         def sql = Sql.newInstance('jdbc:postgresql://localhost:5432/', pgUser, pgPassword, 'org.postgresql.Driver')
@@ -170,7 +152,7 @@ task dropPGDB {
     }
 }
 
-task createMySQLDB {
+tasks.register('createMySQLDB') {
     description = 'Creates the MySQL Database. Needs database name to be passed (e.g., -PdbName=someDBname)'
     doLast {
         def sql = Sql.newInstance('jdbc:mysql://localhost:3306/', mysqlUser, mysqlPassword, 'com.mysql.cj.jdbc.Driver')
@@ -178,7 +160,7 @@ task createMySQLDB {
     }
 }
 
-task dropMySQLDB {
+tasks.register('dropMySQLDB') {
     description = 'Drops the specified MySQL database. Needs database name to be passed (e.g., -PdbName=someDBname)'
     doLast {
         def sql = Sql.newInstance('jdbc:mysql://localhost:3306/', mysqlUser, mysqlPassword, 'com.mysql.cj.jdbc.Driver')
@@ -252,7 +234,7 @@ jib {
     }
 }
 
-task migrateDatabase {
+tasks.register('migrateDatabase') {
     doFirst {
         println "Executing liquibase database migration to version $dbVersion"
         def dbUrl = "jdbc:${dbType}://${dbHost}:${dbPort}/${dbName}"
@@ -284,14 +266,12 @@ cucumber {
 
 tasks.jibDockerBuild.dependsOn bootJar
 
-gitProperties {
-    gitPropertiesResourceDir = file("$buildDir/classes/java/main")
-    dateFormat = "yyyy-MM-dd'T'HH:mmZ"
-    dateFormatTimeZone = 'GMT'
-    failOnNoGitDirectory = false
-}
-
-//generateGitProperties.outputs.upToDateWhen { false }
+//gitProperties {
+//    gitPropertiesResourceDir = file("$buildDir/classes/java/main")
+//    dateFormat = "yyyy-MM-dd'T'HH:mmZ"
+//    dateFormatTimeZone = 'GMT'
+//    failOnNoGitDirectory = false
+//}
 
 // Ensure tasks execute in the correct order
 jar.dependsOn resolve
