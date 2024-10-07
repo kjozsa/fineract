@@ -685,8 +685,9 @@ configure(project.fineractCustomProjects) {
             exclude(module: "slf4j-api")
         }
 
-        compileOnly('org.projectlombok:lombok')
-        annotationProcessor('org.projectlombok:lombok')
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
         annotationProcessor('org.mapstruct:mapstruct-processor')
         annotationProcessor('org.springframework.boot:spring-boot-autoconfigure-processor')
         annotationProcessor('org.springframework.boot:spring-boot-configuration-processor')

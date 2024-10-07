@@ -18,6 +18,8 @@
  */
 description = "Fineract Progressive Loan"
 
+apply(plugin = "io.freefair.lombok")
+
 dependencies {
     implementation(project(":fineract-accounting"))
     implementation(project(":fineract-charge"))
