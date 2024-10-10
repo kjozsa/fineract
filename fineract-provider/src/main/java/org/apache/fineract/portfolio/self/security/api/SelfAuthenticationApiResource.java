@@ -25,11 +25,14 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.security.api.AuthenticationApiResource;
 import org.apache.fineract.infrastructure.security.api.AuthenticationApiResourceSwagger;
@@ -46,14 +49,14 @@ public class SelfAuthenticationApiResource {
     private final AuthenticationApiResource authenticationApiResource;
 
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_JSON})
     @Operation(summary = "Verify authentication", description = "Authenticates the credentials provided and returns the set roles and permissions allowed.\n\n"
             + "Please visit this link for more info - https://fineract.apache.org/legacy-docs/apiLive.htm#selfbasicauth")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = AuthenticationApiResourceSwagger.PostAuthenticationRequest.class)))
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SelfAuthenticationApiResourceSwagger.PostSelfAuthenticationResponse.class))) })
-    public String authenticate(final String apiRequestBodyAsJson) {
-        return this.authenticationApiResource.authenticate(apiRequestBodyAsJson, true);
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SelfAuthenticationApiResourceSwagger.PostSelfAuthenticationResponse.class)))})
+    public Response authenticate(final String apiRequestBodyAsJson, @Context HttpServletRequest httpRequest) {
+        return this.authenticationApiResource.authenticate(apiRequestBodyAsJson, true, httpRequest);
     }
 }
