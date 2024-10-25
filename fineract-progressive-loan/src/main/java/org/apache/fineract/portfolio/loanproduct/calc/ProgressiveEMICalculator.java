@@ -176,6 +176,11 @@ public final class ProgressiveEMICalculator implements EMICalculator {
             repaymentPeriod.setEmi(outstandingLoanBalance.plus(payableInterest).plus(repaymentPeriod.getPaidInterest(), mc)
                     .plus(repaymentPeriod.getPaidPrincipal(), mc));
         }
+        Money totalOutstandingLoanBalance = scheduleModel.getTotalOutstandingLoanBalance();
+        if (totalOutstandingLoanBalance.isGreaterThan(repaymentPeriod.getAdjustedEmi())) {
+            repaymentPeriod.setAdjustedEmi(MathUtil.max(repaymentPeriod.getEmi(), repaymentPeriod.getAdjustedEmi(), false));
+        }
+
         Money payablePrincipal = repaymentPeriod.getEmi().minus(payableInterest, mc);
         return new PayableDetails(repaymentPeriod.getEmi(), payablePrincipal, payableInterest,
                 interestPeriod.getOutstandingLoanBalance().add(interestPeriod.getDisbursementAmount(), mc));
@@ -267,7 +272,7 @@ public final class ProgressiveEMICalculator implements EMICalculator {
                     return;
                 }
                 final RepaymentPeriod newRepaymentPeriod = relatedPeriodFromNewModelIterator.next();
-                relatedRepaymentPeriod.setEmi(newRepaymentPeriod.getEmi());
+                relatedRepaymentPeriod.setEmi(newRepaymentPeriod.getAdjustedEmi());
             });
             calculateOutstandingBalance(scheduleModel);
         }

@@ -43,9 +43,12 @@ public class RepaymentPeriod {
     private final LocalDate dueDate;
     @Getter
     private final List<InterestPeriod> interestPeriods;
-    @Setter
     @Getter
+    @Setter
     private Money emi;
+    @Getter
+    @Setter
+    private Money adjustedEmi;
     @Getter
     private Money paidPrincipal;
     @Getter
@@ -84,6 +87,10 @@ public class RepaymentPeriod {
         for (InterestPeriod interestPeriod : repaymentPeriod.interestPeriods) {
             interestPeriods.add(new InterestPeriod(this, interestPeriod, mc));
         }
+    }
+
+    public Money getAdjustedEmi() {
+        return adjustedEmi != null ? adjustedEmi : emi;
     }
 
     public Optional<RepaymentPeriod> getPrevious() {
@@ -128,7 +135,7 @@ public class RepaymentPeriod {
     }
 
     public boolean isFullyPaid() {
-        return getEmi().isEqualTo(getPaidPrincipal().plus(getPaidInterest()));
+        return getAdjustedEmi().isEqualTo(getPaidPrincipal().plus(getPaidInterest()));
     }
 
     public Money getDueInterest() {

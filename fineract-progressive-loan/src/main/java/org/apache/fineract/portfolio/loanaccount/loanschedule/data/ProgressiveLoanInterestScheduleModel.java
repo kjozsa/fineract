@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProductRelatedDetail;
 
@@ -179,11 +180,21 @@ public class ProgressiveLoanInterestScheduleModel {
         previousInterestPeriod.addDisbursementAmount(disbursedAmount);
         previousInterestPeriod.addBalanceCorrectionAmount(correctionAmount);
         final InterestPeriod interestPeriod = new InterestPeriod(repaymentPeriod, previousInterestPeriod.getDueDate(), originalDueDate,
-                BigDecimal.ZERO, getZero(mc), getZero(mc), getZero(mc), mc);
+                BigDecimal.ZERO, getZero(), getZero(), getZero(), mc);
         repaymentPeriod.getInterestPeriods().add(interestPeriod);
     }
 
-    private Money getZero(MathContext mc) {
-        return Money.zero(loanProductRelatedDetail.getCurrency(), mc);
+    private Money getZero() {
+        return Money.zero(loanProductRelatedDetail.getCurrency());
+    }
+
+    public Money getTotalOutstandingLoanBalance() {
+        Money totalDisbursementAmount = repaymentPeriods.stream().flatMap(repaymentPeriod -> repaymentPeriod.getInterestPeriods().stream()) //
+                .map(InterestPeriod::getDisbursementAmount) //
+                .reduce(getZero(), Money::plus);
+
+        Money totalPaidPrincipal = repaymentPeriods.stream().map(RepaymentPeriod::getPaidPrincipal) //
+                .reduce(getZero(), Money::plus);
+        return MathUtil.negativeToZero(totalDisbursementAmount.minus(totalPaidPrincipal));
     }
 }

@@ -228,7 +228,7 @@ class ProgressiveEMICalculatorTest {
             if (i == repaymentPeriods.size() - 1) {
                 Assertions.assertEquals(0.0, toDouble(repaymentPeriod.getOutstandingLoanBalance().getAmount()));
             } else {
-                Assertions.assertEquals(8.65, toDouble(repaymentPeriod.getEmi().getAmount()));
+                Assertions.assertEquals(8.65, toDouble(repaymentPeriod.getAdjustedEmi().getAmount()));
                 Assertions.assertTrue(0 < toDouble(repaymentPeriod.getOutstandingLoanBalance().getAmount()));
             }
         }
@@ -1105,7 +1105,7 @@ class ProgressiveEMICalculatorTest {
         final RepaymentPeriod repaymentPeriod = interestScheduleModel.repaymentPeriods().get(repaymentIdx);
         final InterestPeriod interestPeriod = repaymentPeriod.getInterestPeriods().get(interestIdx);
 
-        Assertions.assertEquals(emiValue, toDouble(repaymentPeriod.getEmi().getAmount()));
+        Assertions.assertEquals(emiValue, toDouble(repaymentPeriod.getAdjustedEmi().getAmount()));
         Assertions.assertEquals(rateFactor, toDouble(applyMathContext(interestPeriod.getRateFactor())));
         Assertions.assertEquals(interestDue, toDouble(interestPeriod.getCalculatedDueInterest().getAmount()));
         Assertions.assertEquals(interestDueCumulated, toDouble(repaymentPeriod.getDueInterest().getAmount()));
