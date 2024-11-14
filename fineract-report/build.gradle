@@ -16,10 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'Fineract Report'
+description = 'Fineract Report Module'
 
 apply plugin: 'java'
+apply plugin: 'io.freefair.lombok'
 apply plugin: 'org.springframework.boot'
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
 
 compileJava.doLast {
     def mainSS = sourceSets.main
@@ -75,6 +84,18 @@ configurations {
 }
 
 apply from: 'dependencies.gradle'
+
+dependencies {
+    implementation(
+            project(':fineract-core')
+    )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+    )
+}
 
 // Configuration for the modernizer plugin
 // https://github.com/andygoossens/gradle-modernizer-plugin
