@@ -88,13 +88,13 @@ apply from: 'dependencies.gradle'
 dependencies {
     implementation(
             project(':fineract-core')
-    )
+            )
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
-    )
+            )
 }
 
 // Configuration for the modernizer plugin

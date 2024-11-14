@@ -33,18 +33,18 @@ check.dependsOn('cucumber')
 
 dependencies {
     annotationProcessor(
-        'org.projectlombok:lombok',
-        'org.mapstruct:mapstruct-processor',
-        'org.springframework.boot:spring-boot-configuration-processor'
-    )
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor',
+            'org.springframework.boot:spring-boot-configuration-processor'
+            )
 
     implementation(
-        project(':fineract-core'),
-        project(':fineract-loan'),
-        project(':fineract-accounting'),
-        project(':fineract-savings'),
-        'org.mapstruct:mapstruct'
-    )
+            project(':fineract-core'),
+            project(':fineract-loan'),
+            project(':fineract-accounting'),
+            project(':fineract-savings'),
+            'org.mapstruct:mapstruct'
+            )
 }
 
 // Properly declare task for JPA enhancement
