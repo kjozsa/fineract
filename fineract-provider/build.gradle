@@ -39,25 +39,38 @@ task enhanceJPA(type: JavaExec) {
     dependsOn compileJava
     mustRunAfter compileJava
 
+    def enhancementDir = file("${buildDir}/enhanced-classes")
     inputs.files(compileJava)
-    outputs.dir(compileJava.destinationDirectory)
+    outputs.dir(enhancementDir)
 
     doFirst {
-        def source = compileJava.destinationDirectory.get().asFile
+        // Clean enhancement directory
+        enhancementDir.deleteDir()
+        enhancementDir.mkdirs()
+
+        // Copy compiled classes to enhancement directory
+        copy {
+            from compileJava.destinationDirectory
+            into enhancementDir
+        }
+
+        // Copy persistence.xml
         copy {
             from file("src/main/resources/jpa/persistence.xml")
-            into "${source}/META-INF/"
+            into "${enhancementDir}/META-INF/"
         }
     }
 
     main = 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
-    def source = compileJava.destinationDirectory.get().asFile
-    args = ['-persistenceinfo', source, source, source]
+    args = ['-persistenceinfo', enhancementDir, enhancementDir, enhancementDir]
     classpath = sourceSets.main.runtimeClasspath
 
     doLast {
-        delete {
-            delete "${source}/META-INF/persistence.xml"
+        // Copy enhanced classes back
+        copy {
+            from enhancementDir
+            into compileJava.destinationDirectory
+            exclude 'META-INF/persistence.xml'
         }
     }
 }
