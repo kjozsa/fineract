@@ -39,6 +39,9 @@ task enhanceJPA(type: JavaExec) {
     inputs.files(sourceSets.main.output.classesDirs)
     outputs.dir(sourceSets.main.output.classesDirs)
 
+    dependsOn compileJava
+    mustRunAfter compileJava
+
     doFirst {
         def source = sourceSets.main.java.classesDirectory.get()
         copy {
@@ -64,10 +67,11 @@ task enhanceJPA(type: JavaExec) {
     }
 }
 
-compileJava.finalizedBy enhanceJPA
-compileTestJava.dependsOn enhanceJPA
+// Make sure enhanceJPA runs between compileJava and classes
 classes.dependsOn enhanceJPA
-testClasses.dependsOn enhanceJPA
+
+// Make test compilation depend on enhanced classes
+compileTestJava.dependsOn classes
 
 // Configuration for Swagger documentation generation task
 task prepareInputYaml {
