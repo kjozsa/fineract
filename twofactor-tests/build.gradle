@@ -52,7 +52,15 @@ dependencies {
             'io.rest-assured:json-schema-validator',
             'org.testcontainers:junit-jupiter',
             'org.testcontainers:mariadb',
-            'org.testcontainers:postgresql'
+            'org.testcontainers:postgresql',
+            'com.icegreen:greenmail-junit5:2.0.1',
+            'jakarta.mail:jakarta.mail-api:2.1.2',
+            'org.eclipse.angus:jakarta.mail:2.0.2'
+            )
+
+    testAnnotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor'
             )
 }
 
