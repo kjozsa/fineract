@@ -22,7 +22,9 @@ import com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask
 // TODO: @vidakovic we should publish this lib to Maven Central; do in separate PR
 description = 'Fineract Avro Schemas'
 
+apply plugin: 'java'
 apply plugin: 'com.github.davidmc24.gradle.plugin.avro-base'
+apply plugin: 'io.freefair.lombok'
 
 apply from: 'dependencies.gradle'
 

@@ -154,7 +154,8 @@ dependencyManagement {
         dependency "io.gsonfire:gson-fire:1.9.0"
         dependency "com.google.code.findbugs:jsr305:3.0.2"
         dependency "commons-codec:commons-codec:1.17.1"
-        dependency "org.projectlombok:lombok:1.18.34"
+        // Lombok is now managed by the Lombok Gradle plugin
+        dependency 'org.projectlombok:lombok:1.18.30'
 
         dependency 'org.bouncycastle:bcpkix-jdk15to18:1.79'
         dependency 'org.bouncycastle:bcprov-jdk15to18:1.79'

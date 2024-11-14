@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+apply plugin: 'java'
 apply plugin: 'org.openapi.generator'
+apply plugin: 'io.freefair.lombok'
+
 description = 'Fineract Client'
 
 apply from: 'dependencies.gradle'

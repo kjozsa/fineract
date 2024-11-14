@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'Fineract Integration Tests for OAuth2'
+description = 'Fineract OAuth2 Integration Tests'
 
 apply plugin: 'com.bmuschko.cargo'
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.freefair.lombok'
 
 // Configuration for the Gradle Cargo plugin
 // https://github.com/bmuschko/gradle-cargo-plugin
@@ -35,6 +38,21 @@ configurations {
 }
 dependencies {
     driver 'mysql:mysql-connector-java:8.0.33'
+    implementation(
+            project(':fineract-core'),
+            project(':fineract-provider')
+    )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter',
+            'io.rest-assured:rest-assured',
+            'io.rest-assured:json-schema-validator',
+            'org.testcontainers:junit-jupiter',
+            'org.testcontainers:mariadb',
+            'org.testcontainers:postgresql'
+    )
 }
 
 cargo {
@@ -88,6 +106,10 @@ cargoStartLocal.dependsOn ':fineract-war:war'
 cargoStartLocal.mustRunAfter 'testClasses'
 
 test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
     dependsOn(cargoStartLocal)
     finalizedBy cargoStopLocal
 }

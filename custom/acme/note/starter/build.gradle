@@ -16,10 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'ACME Corp.: Fineract Note Starter'
+description = 'Fineract Custom ACME Note Starter'
 
 group = 'com.acme.fineract.portfolio.note'
 
 archivesBaseName = 'acme-fineract-note-starter'
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.freefair.lombok'
+
+dependencies {
+    implementation(
+            project(':fineract-core')
+    )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+    )
+}
 
 apply from: 'dependencies.gradle'

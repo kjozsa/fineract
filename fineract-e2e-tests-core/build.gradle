@@ -51,9 +51,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
 
-    testCompileOnly 'org.projectlombok:lombok:1.18.34'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
-
     testImplementation "ch.qos.logback:logback-core:1.5.12"
     testImplementation "ch.qos.logback:logback-classic:1.5.12"
 

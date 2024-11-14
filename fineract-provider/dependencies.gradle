@@ -188,10 +188,6 @@ dependencies {
             'org.apache.httpcomponents:httpclient'
             )
 
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    annotationProcessor 'org.mapstruct:mapstruct-processor'
-
     implementation 'ch.qos.logback.contrib:logback-json-classic'
     implementation 'ch.qos.logback.contrib:logback-jackson'
     implementation 'org.codehaus.janino:janino'

@@ -18,7 +18,10 @@
  */
 description = 'Fineract WAR'
 
+apply plugin: 'java'
 apply plugin: 'war'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.freefair.lombok'
 apply plugin: 'distribution'
 apply from: "${rootDir}/buildSrc/src/main/groovy/org.apache.fineract.dependencies.gradle"
 
@@ -48,6 +51,10 @@ war {
 }
 
 dependencies {
+    implementation(project(':fineract-provider')) {
+        exclude module: 'mariadb-java-client'
+        exclude module: 'postgresql'
+    }
     implementation project(':fineract-core')
     implementation project(':fineract-accounting')
     implementation project(':fineract-investor')
@@ -58,7 +65,14 @@ dependencies {
     implementation project(':fineract-loan')
     implementation project(':fineract-progressive-loan')
     implementation project(':fineract-savings')
-    implementation project(':fineract-provider')
+}
+
+bootWar {
+    mainClass = 'org.apache.fineract.ServerApplication'
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
 }
 
 tasks.withType(Tar) {

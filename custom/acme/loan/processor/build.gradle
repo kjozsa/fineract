@@ -16,10 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'ACME Corp.: Fineract Loan Transaction Processors'
+description = 'Fineract Custom ACME Loan Processor'
 
 group = 'com.acme.fineract'
 
 archivesBaseName = 'acme-fineract-loan-processor'
 
 apply from: 'dependencies.gradle'
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.freefair.lombok'
+
+dependencies {
+    implementation(
+            project(':fineract-core'),
+            project(':fineract-loan'),
+            project(':custom:acme:loan:starter')
+    )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+    )
+}

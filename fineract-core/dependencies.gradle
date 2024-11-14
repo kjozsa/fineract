@@ -84,6 +84,29 @@ dependencies {
         exclude group: 'com.sun.activation'
     }
 
+    implementation(
+            'com.google.guava:guava',
+            'com.jayway.jsonpath:json-path',
+            'commons-io:commons-io',
+            'jakarta.annotation:jakarta.annotation-api',
+            'jakarta.validation:jakarta.validation-api',
+            'org.apache.commons:commons-lang3',
+            'org.apache.commons:commons-text',
+            'org.springframework:spring-context',
+            'org.springframework.boot:spring-boot',
+            'org.springframework.security:spring-security-core'
+    )
+
+    annotationProcessor(
+            'org.springframework.boot:spring-boot-configuration-processor'
+    )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+    )
+
     // runtimeOnly dependencies are things that Fineract code has no direct compile time dependency on, but which must be present at run-time
     runtimeOnly(
             'org.apache.bval:org.apache.bval.bundle',
@@ -92,10 +115,6 @@ dependencies {
             // it's useful to have this for the Spring Boot TestRestTemplate http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-rest-templates-test-utility
             'org.apache.httpcomponents:httpclient'
             )
-
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    annotationProcessor 'org.mapstruct:mapstruct-processor'
 
     implementation 'ch.qos.logback.contrib:logback-json-classic'
     implementation 'ch.qos.logback.contrib:logback-jackson'
