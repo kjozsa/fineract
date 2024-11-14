@@ -16,8 +16,6 @@
 # under the License.
 #
 
-# You can replace and test a more recent version of docker compose
-version: "3.7"
 services:
   kafka:
     image: "bitnami/kafka:3.8.1-debian-12-r1"
