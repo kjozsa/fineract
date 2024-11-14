@@ -54,7 +54,7 @@ task enhanceJPA(type: JavaExec) {
             into enhancementDir
         }
 
-        // Copy persistence.xml
+        // Copy persistence.xml for enhancement
         copy {
             from file("src/main/resources/jpa/persistence.xml")
             into "${enhancementDir}/META-INF/"
@@ -75,11 +75,9 @@ task enhanceJPA(type: JavaExec) {
     }
 }
 
-// Make sure enhanceJPA runs between compileJava and classes
-classes.dependsOn enhanceJPA
-
-// Make test compilation depend on enhanced classes
-compileTestJava.dependsOn enhanceJPA
+// Configure task dependencies
+compileJava.finalizedBy enhanceJPA
+compileTestJava.mustRunAfter enhanceJPA
 
 // Configuration for Swagger documentation generation task
 task prepareInputYaml {
