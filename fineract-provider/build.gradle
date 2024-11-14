@@ -62,7 +62,12 @@ task enhanceJPA(type: JavaExec) {
     }
 
     main = 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
-    args = ['-persistenceinfo', enhancementDir, enhancementDir, enhancementDir]
+    args = [
+        '-persistenceinfo',
+        enhancementDir,
+        enhancementDir,
+        enhancementDir
+    ]
     classpath = sourceSets.main.runtimeClasspath
 
     doLast {
