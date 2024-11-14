@@ -38,6 +38,11 @@ dependencies {
             'org.springframework.boot:spring-boot-configuration-processor'
             )
 
+    testAnnotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor'
+            )
+
     implementation(
             project(':fineract-core'),
             project(':fineract-loan'),

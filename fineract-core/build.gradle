@@ -19,52 +19,46 @@
 description = 'Fineract Core'
 
 apply plugin: 'java'
-apply plugin: 'eclipse'
+apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
 
-compileJava.doLast {
-    def mainSS = sourceSets.main
-    def source = mainSS.java.classesDirectory.get()
-    copy {
-        from file("src/main/resources/jpa/core/persistence.xml")
-        into "${source}/META-INF/"
-    }
-    javaexec {
-        description = 'Performs EclipseLink static weaving of entity classes'
-        def target = source
-        main 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
-        args '-persistenceinfo', source, '-classpath', sourceSets.main.runtimeClasspath, source, target
-        classpath sourceSets.main.runtimeClasspath
-    }
-    delete {
-        delete "${source}/META-INF/persistence.xml"
-    }
+dependencies {
+    annotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor',
+            'org.springframework.boot:spring-boot-configuration-processor'
+            )
+
+    testAnnotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor'
+            )
+
+    implementation(
+            'org.mapstruct:mapstruct',
+            'org.springframework.boot:spring-boot-starter-web',
+            'org.springframework.boot:spring-boot-starter-security',
+            'org.springframework.boot:spring-boot-starter-batch',
+            'org.springframework.batch:spring-batch-integration'
+            )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+            )
 }
 
-configurations {
-    providedRuntime // needed for Spring Boot executable WAR
-    providedCompile
-    compile() {
-        exclude module: 'hibernate-entitymanager'
-        exclude module: 'hibernate-validator'
-        exclude module: 'activation'
-        exclude module: 'bcmail-jdk14'
-        exclude module: 'bcprov-jdk14'
-        exclude module: 'bctsp-jdk14'
-        exclude module: 'c3p0'
-        exclude module: 'stax-api'
-        exclude module: 'jaxb-api'
-        exclude module: 'jaxb-impl'
-        exclude module: 'jboss-logging'
-        exclude module: 'itext-rtf'
-        exclude module: 'classworlds'
-    }
-    runtime
+tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+        '-Amapstruct.defaultComponentModel=spring',
+        '-Amapstruct.suppressGeneratorTimestamp=true',
+        '-Amapstruct.suppressGeneratorVersionInfoComment=true',
+        '-Amapstruct.verbose=true'
+    ]
 }
-
-apply from: 'dependencies.gradle'
 
 // Configuration for the modernizer plugin
-// https://github.com/andygoossens/gradle-modernizer-plugin
 modernizer {
     ignoreClassNamePatterns = [
         '.*AbstractPersistableCustom',
@@ -88,3 +82,5 @@ if (!(project.hasProperty('env') && project.getProperty('env') == 'dev')) {
         }
     }
 }
+
+apply from: 'dependencies.gradle'

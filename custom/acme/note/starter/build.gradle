@@ -23,8 +23,8 @@ group = 'com.acme.fineract.portfolio.note'
 archivesBaseName = 'acme-fineract-note-starter'
 
 apply plugin: 'java'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
 
 dependencies {
     implementation(

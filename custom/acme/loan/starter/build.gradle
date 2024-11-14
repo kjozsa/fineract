@@ -22,11 +22,9 @@ group = 'com.acme.fineract'
 
 archivesBaseName = 'acme-fineract-loan-starter'
 
-apply from: 'dependencies.gradle'
-
 apply plugin: 'java'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
 
 dependencies {
     implementation(
@@ -40,3 +38,5 @@ dependencies {
             'org.mockito:mockito-junit-jupiter'
             )
 }
+
+apply from: 'dependencies.gradle'

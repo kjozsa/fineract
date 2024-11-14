@@ -19,7 +19,22 @@
 description = 'ACME Corp.: Fineract Event Starter'
 
 group = 'com.acme.fineract.event'
-
 archivesBaseName = 'acme-fineract-event-starter'
+
+apply plugin: 'java'
+apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
+
+dependencies {
+    implementation(
+            project(':fineract-core')
+            )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+            )
+}
 
 apply from: 'dependencies.gradle'
