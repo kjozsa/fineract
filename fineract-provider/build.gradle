@@ -31,6 +31,22 @@ apply plugin: 'io.freefair.lombok'
 
 check.dependsOn('cucumber')
 
+dependencies {
+    annotationProcessor(
+        'org.projectlombok:lombok',
+        'org.mapstruct:mapstruct-processor',
+        'org.springframework.boot:spring-boot-configuration-processor'
+    )
+
+    implementation(
+        project(':fineract-core'),
+        project(':fineract-loan'),
+        project(':fineract-accounting'),
+        project(':fineract-savings'),
+        'org.mapstruct:mapstruct'
+    )
+}
+
 // Properly declare task for JPA enhancement
 task enhanceJPA(type: JavaExec) {
     description = 'Performs static weaving of entity classes'
@@ -83,6 +99,16 @@ task enhanceJPA(type: JavaExec) {
 // Configure task dependencies
 compileJava.finalizedBy enhanceJPA
 compileTestJava.mustRunAfter enhanceJPA
+
+// Ensure MapStruct runs before test compilation
+tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+        '-Amapstruct.defaultComponentModel=spring',
+        '-Amapstruct.suppressGeneratorTimestamp=true',
+        '-Amapstruct.suppressGeneratorVersionInfoComment=true',
+        '-Amapstruct.verbose=true'
+    ]
+}
 
 // Configuration for Swagger documentation generation task
 task prepareInputYaml {
