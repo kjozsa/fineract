@@ -16,10 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'Fineract Savings'
+description = 'Fineract Savings Module'
 
 apply plugin: 'java'
+apply plugin: 'io.freefair.lombok'
 apply plugin: 'org.springframework.boot'
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+dependencies {
+    implementation(
+            project(':fineract-core')
+            )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+            )
+}
 
 compileJava.doLast {
     def mainSS = sourceSets.main

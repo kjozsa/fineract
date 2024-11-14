@@ -16,10 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'Fineract Tax'
+description = 'Fineract Tax Module'
 
 apply plugin: 'java'
+apply plugin: 'io.freefair.lombok'
 apply plugin: 'org.springframework.boot'
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
 
 compileJava.doLast {
     def mainSS = sourceSets.main
@@ -68,6 +77,18 @@ configurations {
         exclude module: 'classworlds'
     }
     runtime
+}
+
+dependencies {
+    implementation(
+            project(':fineract-core')
+            )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+            )
 }
 
 apply from: 'dependencies.gradle'
