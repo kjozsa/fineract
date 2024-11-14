@@ -21,13 +21,44 @@ plugins {
     id 'java'
 }
 
+description = 'Fineract E2E Tests Core'
+
+apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    annotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor'
+            )
+
+    testAnnotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor'
+            )
+
+    implementation(
+            project(':fineract-client'),
+            'io.cucumber:cucumber-java',
+            'io.cucumber:cucumber-junit',
+            'io.cucumber:cucumber-spring',
+            'org.springframework.boot:spring-boot-starter-test',
+            'org.apache.commons:commons-lang3',
+            'com.google.code.gson:gson',
+            'org.awaitility:awaitility'
+            )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter',
+            'org.mockito:mockito-core',
+            'org.mockito:mockito-junit-jupiter'
+            )
+
     testImplementation(project(':fineract-avro-schemas'))
-    testImplementation(project(':fineract-client'))
 
     testImplementation 'org.springframework:spring-context'
     implementation 'org.springframework:spring-test'
@@ -37,19 +68,11 @@ dependencies {
 
     testImplementation 'com.squareup.retrofit2:retrofit:2.11.0'
     testImplementation 'commons-httpclient:commons-httpclient:3.1'
-    testImplementation 'org.apache.commons:commons-lang3:3.17.0'
     testImplementation 'com.googlecode.json-simple:json-simple:1.1.1'
-    testImplementation 'com.google.code.gson:gson:2.11.0'
-
-    testImplementation 'io.cucumber:cucumber-java:7.20.1'
-    testImplementation 'io.cucumber:cucumber-junit:7.20.1'
-    testImplementation 'io.cucumber:cucumber-spring:7.20.1'
 
     testImplementation 'io.qameta.allure:allure-cucumber7-jvm:2.29.0'
 
     testImplementation 'org.assertj:assertj-core:3.26.3'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
 
     testImplementation "ch.qos.logback:logback-core:1.5.12"
     testImplementation "ch.qos.logback:logback-classic:1.5.12"
@@ -60,6 +83,13 @@ dependencies {
     testImplementation 'io.github.classgraph:classgraph:4.8.177'
 
     testImplementation 'org.apache.commons:commons-collections4:4.4'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

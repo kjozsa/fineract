@@ -23,14 +23,22 @@ group = 'com.acme.fineract'
 archivesBaseName = 'acme-fineract-loan-job'
 
 apply plugin: 'java'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
 
 dependencies {
+    annotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor',
+            'org.springframework.boot:spring-boot-configuration-processor'
+            )
+
     implementation(
             project(':fineract-core'),
             project(':fineract-loan'),
-            project(':custom:acme:loan:starter')
+            project(':custom:acme:loan:starter'),
+            'org.springframework.boot:spring-boot-starter',
+            'org.mapstruct:mapstruct'
             )
 
     testImplementation(
@@ -38,6 +46,13 @@ dependencies {
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
             )
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 apply from: 'dependencies.gradle'

@@ -18,12 +18,27 @@
  */
 description = 'Fineract Integration Tests'
 
+apply plugin: 'java'
 apply plugin: 'com.bmuschko.cargo'
+apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
 
 // Configuration for the Gradle Cargo plugin
 // https://github.com/bmuschko/gradle-cargo-plugin
 configurations {
     tomcat
+}
+
+dependencies {
+    annotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor'
+            )
+
+    testAnnotationProcessor(
+            'org.projectlombok:lombok',
+            'org.mapstruct:mapstruct-processor'
+            )
 }
 
 apply from: 'dependencies.gradle'
@@ -37,8 +52,15 @@ dependencies {
     driver 'mysql:mysql-connector-java:8.0.33'
 }
 
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
 cargo {
-    containerId "tomcat10x"
+    containerId = 'tomcat10x'
 
     // looks like Cargo doesn't detect the WAR file automatically in the multi-module setup
     deployable {
@@ -74,14 +96,14 @@ cargo {
             }
             jvmArgs += ' -Dspring.profiles.active=test -Dfineract.events.external.enabled=true'
             property 'cargo.start.jvmargs', jvmArgs
+            property 'cargo.servlet.port', 8443
+            property 'cargo.protocol', 'https'
             property 'cargo.tomcat.connector.keystoreFile', file("$rootDir/fineract-provider/src/main/resources/keystore.jks")
             property 'cargo.tomcat.connector.keystorePass', 'openmf'
             property 'cargo.tomcat.connector.keystoreType', 'JKS'
             property 'cargo.tomcat.httpSecure', true
             property 'cargo.tomcat.connector.sslProtocol', 'TLS'
             property 'cargo.tomcat.connector.clientAuth', false
-            property 'cargo.protocol', 'https'
-            property 'cargo.servlet.port', 8443
         }
     }
 }

@@ -579,9 +579,6 @@ public class DelinquencyWritePlatformServiceRangeChangeEventTest {
         range1.setId(1L);
         DelinquencyRange range2 = DelinquencyRange.instance("Range30", 3, 30);
         range2.setId(2L);
-        List<DelinquencyRange> listDelinquencyRanges = Arrays.asList(range1, range2);
-        DelinquencyBucket delinquencyBucket = new DelinquencyBucket("test Bucket");
-        delinquencyBucket.setRanges(listDelinquencyRanges);
 
         LoanDelinquencyTagHistory prevTagForLoan = new LoanDelinquencyTagHistory();
         prevTagForLoan.setDelinquencyRange(range1);
