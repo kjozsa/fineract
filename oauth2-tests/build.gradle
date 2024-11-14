@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'Fineract OAuth2 Integration Tests'
+description = 'Fineract OAuth2 Tests'
 
 apply plugin: 'com.bmuschko.cargo'
 apply plugin: 'java'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'io.freefair.lombok'
+apply plugin: 'io.spring.dependency-management'
 
 // Configuration for the Gradle Cargo plugin
 // https://github.com/bmuschko/gradle-cargo-plugin
@@ -29,7 +29,9 @@ configurations {
     tomcat
 }
 
-apply from: 'dependencies.gradle'
+dependencies {
+    tomcat "org.apache.tomcat:tomcat:9.0.83@zip"
+}
 
 // Allow external drivers to be used for the tests without packaging it
 // mainly due to license incompatibilities
@@ -38,15 +40,14 @@ configurations {
 }
 dependencies {
     driver 'mysql:mysql-connector-java:8.0.33'
-    implementation(
-            project(':fineract-core'),
-            project(':fineract-provider')
-            )
+    implementation(project(':fineract-provider'))
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter',
+            'org.springframework.boot:spring-boot-starter-test',
+            'org.springframework.security:spring-security-test',
             'io.rest-assured:rest-assured',
             'io.rest-assured:json-schema-validator',
             'org.testcontainers:junit-jupiter',
@@ -55,17 +56,27 @@ dependencies {
             )
 }
 
-cargo {
-    containerId "tomcat10x"
+apply from: 'dependencies.gradle'
 
-    // looks like Cargo doesn't detect the WAR file automatically in the multi-module setup
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+    dependsOn(cargoStartLocal)
+    finalizedBy cargoStopLocal
+}
+
+cargo {
+    containerId = 'tomcat9x'
+
     deployable {
-        file = file("$rootDir/fineract-war/build/libs/fineract-provider.war")
+        file = tasks.getByPath(':fineract-war:war').archiveFile
         context = 'fineract-provider'
     }
 
     local {
-        logLevel = 'low'
+        logLevel = 'high'
         outputFile = file("$buildDir/cargo/oauth2-tests-output.log")
         installer {
             installConfiguration = configurations.tomcat
@@ -89,30 +100,21 @@ cargo {
             }
             jvmArgs += ' -Dspring.profiles.active=test -Dfineract.events.external.enabled=true'
             property 'cargo.start.jvmargs', jvmArgs
+            property 'cargo.servlet.port', 8443
+            property 'cargo.protocol', 'https'
             property 'cargo.tomcat.connector.keystoreFile', file("$rootDir/fineract-provider/src/main/resources/keystore.jks")
             property 'cargo.tomcat.connector.keystorePass', 'openmf'
             property 'cargo.tomcat.connector.keystoreType', 'JKS'
             property 'cargo.tomcat.httpSecure', true
             property 'cargo.tomcat.connector.sslProtocol', 'TLS'
             property 'cargo.tomcat.connector.clientAuth', false
-            property 'cargo.protocol', 'https'
-            property 'cargo.servlet.port', 8443
         }
     }
 }
 
-cargoRunLocal.dependsOn ':fineract-war:war'
 cargoStartLocal.dependsOn ':fineract-war:war'
+cargoRunLocal.dependsOn ':fineract-war:war'
 cargoStartLocal.mustRunAfter 'testClasses'
-
-test {
-    useJUnitPlatform()
-    testLogging {
-        events "passed", "skipped", "failed"
-    }
-    dependsOn(cargoStartLocal)
-    finalizedBy cargoStopLocal
-}
 
 // NOTE: Gradle suggested these dependencies
 compileTestJava.dependsOn(':fineract-provider:generateGitProperties', ':fineract-provider:processResources', ':fineract-provider:resolve')
