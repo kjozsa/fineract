@@ -30,8 +30,7 @@ apply plugin: 'io.freefair.lombok'
 
 dependencies {
     implementation(
-            project(':fineract-core'),
-            project(':custom:acme:note:starter')
+            project(':fineract-core')
             )
 
     testImplementation(

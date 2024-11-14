@@ -18,7 +18,6 @@
  */
 
 dependencies {
-    implementation(project(':custom:acme:note:service'))
     implementation('org.springframework.boot:spring-boot-starter')
     testImplementation(project(':fineract-core'))
     testImplementation(project(':fineract-loan'))
