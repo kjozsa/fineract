@@ -36,14 +36,14 @@ task enhanceJPA(type: JavaExec) {
     description = 'Performs static weaving of entity classes'
     group = 'build'
 
-    inputs.files(sourceSets.main.output.classesDirs)
-    outputs.dir(sourceSets.main.output.classesDirs)
-
     dependsOn compileJava
     mustRunAfter compileJava
 
+    inputs.files(compileJava)
+    outputs.dir(compileJava.destinationDirectory)
+
     doFirst {
-        def source = sourceSets.main.java.classesDirectory.get()
+        def source = compileJava.destinationDirectory.get().asFile
         copy {
             from file("src/main/resources/jpa/persistence.xml")
             into "${source}/META-INF/"
@@ -51,13 +51,8 @@ task enhanceJPA(type: JavaExec) {
     }
 
     main = 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
-    def source = sourceSets.main.java.classesDirectory.get()
-    args = [
-        '-persistenceinfo',
-        source,
-        source,
-        source
-    ]
+    def source = compileJava.destinationDirectory.get().asFile
+    args = ['-persistenceinfo', source, source, source]
     classpath = sourceSets.main.runtimeClasspath
 
     doLast {
@@ -71,7 +66,7 @@ task enhanceJPA(type: JavaExec) {
 classes.dependsOn enhanceJPA
 
 // Make test compilation depend on enhanced classes
-compileTestJava.dependsOn classes
+compileTestJava.dependsOn enhanceJPA
 
 // Configuration for Swagger documentation generation task
 task prepareInputYaml {
