@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.fineract.infrastructure.campaigns.sms.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;

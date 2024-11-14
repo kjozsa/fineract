@@ -95,17 +95,17 @@ dependencies {
             'org.springframework:spring-context',
             'org.springframework.boot:spring-boot',
             'org.springframework.security:spring-security-core'
-    )
+            )
 
     annotationProcessor(
             'org.springframework.boot:spring-boot-configuration-processor'
-    )
+            )
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
-    )
+            )
 
     // runtimeOnly dependencies are things that Fineract code has no direct compile time dependency on, but which must be present at run-time
     runtimeOnly(

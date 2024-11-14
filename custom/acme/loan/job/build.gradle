@@ -31,13 +31,13 @@ dependencies {
             project(':fineract-core'),
             project(':fineract-loan'),
             project(':custom:acme:loan:starter')
-    )
+            )
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
-    )
+            )
 }
 
 apply from: 'dependencies.gradle'

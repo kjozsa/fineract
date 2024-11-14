@@ -80,7 +80,7 @@ dependencies {
     annotationProcessor(
             'org.springframework.boot:spring-boot-configuration-processor',
             'org.mapstruct:mapstruct-processor'
-    )
+            )
     // testCompile dependencies are ONLY used in src/test, not src/main.
     // Do NOT repeat dependencies which are ALREADY in implementation or runtimeOnly!
     //
@@ -97,5 +97,5 @@ dependencies {
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
-    )
+            )
 }

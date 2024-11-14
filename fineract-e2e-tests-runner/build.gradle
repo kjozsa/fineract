@@ -42,7 +42,7 @@ dependencies {
             'org.springframework.boot:spring-boot',
             'org.springframework.security:spring-security-core',
             project(':fineract-e2e-tests-core')
-    )
+            )
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
@@ -82,7 +82,7 @@ dependencies {
             'org.apache.avro:avro:1.12.0',
             'io.github.classgraph:classgraph:4.8.177',
             'org.apache.commons:commons-collections4:4.4'
-    )
+            )
 }
 
 tasks.named('test') {

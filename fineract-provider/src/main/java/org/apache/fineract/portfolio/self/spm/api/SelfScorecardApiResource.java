@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.fineract.portfolio.self.spm.api;
 
 import io.swagger.v3.oas.annotations.tags.Tag;

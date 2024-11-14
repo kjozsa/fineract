@@ -32,11 +32,11 @@ dependencies {
     implementation(
             project(':fineract-core'),
             project(':fineract-loan')
-    )
+            )
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
-    )
+            )
 }

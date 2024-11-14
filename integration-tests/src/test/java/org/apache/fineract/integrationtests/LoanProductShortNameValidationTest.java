@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.fineract.integrationtests;
 
 import static io.restassured.http.ContentType.JSON;

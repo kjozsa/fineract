@@ -41,7 +41,7 @@ dependencies {
     implementation(
             project(':fineract-core'),
             project(':fineract-provider')
-    )
+            )
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
@@ -52,7 +52,7 @@ dependencies {
             'org.testcontainers:junit-jupiter',
             'org.testcontainers:mariadb',
             'org.testcontainers:postgresql'
-    )
+            )
 }
 
 cargo {

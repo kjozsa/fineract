@@ -34,10 +34,10 @@ check.dependsOn('cucumber')
 task enhanceJPA(type: JavaExec) {
     description = 'Performs static weaving of entity classes'
     group = 'build'
-    
+
     inputs.files(sourceSets.main.output.classesDirs)
     outputs.dir(sourceSets.main.output.classesDirs)
-    
+
     doFirst {
         def source = sourceSets.main.java.classesDirectory.get()
         copy {
@@ -45,12 +45,17 @@ task enhanceJPA(type: JavaExec) {
             into "${source}/META-INF/"
         }
     }
-    
+
     main = 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
     def source = sourceSets.main.java.classesDirectory.get()
-    args = ['-persistenceinfo', source, source, source]
+    args = [
+        '-persistenceinfo',
+        source,
+        source,
+        source
+    ]
     classpath = sourceSets.main.runtimeClasspath
-    
+
     doLast {
         delete {
             delete "${source}/META-INF/persistence.xml"
@@ -64,11 +69,11 @@ compileJava.finalizedBy enhanceJPA
 task prepareInputYaml {
     def inputFile = file("${projectDir}/config/swagger/fineract-input.yaml.template")
     def outputFile = file("${buildDir}/tmp/swagger/fineract-input.yaml")
-    
+
     inputs.file(inputFile)
     inputs.property("version", project.version)
     outputs.file(outputFile)
-    
+
     doLast {
         outputFile.parentFile.mkdirs()
         copy {
@@ -91,7 +96,7 @@ resolve {
     openApiFile = file("${buildDir}/tmp/swagger/fineract-input.yaml")
     sortOutput = true
     dependsOn(prepareInputYaml)
-    
+
     inputs.files(sourceSets.main.runtimeClasspath)
     inputs.file(openApiFile)
     outputs.dir(outputDir)

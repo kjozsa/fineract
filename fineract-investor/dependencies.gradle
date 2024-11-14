@@ -69,12 +69,12 @@ dependencies {
             'org.springframework.security:spring-security-core',
             project(':fineract-core'),
             project(':fineract-loan')
-    )
+            )
 
     annotationProcessor(
             'org.springframework.boot:spring-boot-configuration-processor',
             'org.mapstruct:mapstruct-processor'
-    )
+            )
 
     implementation ('org.springframework.boot:spring-boot-starter-data-jpa') {
         exclude group: 'org.hibernate'
@@ -90,7 +90,7 @@ dependencies {
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
-    )
+            )
     testImplementation ('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'com.jayway.jsonpath', module: 'json-path'
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'

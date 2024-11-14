@@ -29,13 +29,13 @@ apply plugin: 'io.freefair.lombok'
 dependencies {
     implementation(
             project(':fineract-core')
-    )
+            )
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter',
             'org.mockito:mockito-core',
             'org.mockito:mockito-junit-jupiter'
-    )
+            )
 }
 
 apply from: 'dependencies.gradle'
