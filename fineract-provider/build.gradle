@@ -27,6 +27,7 @@ apply plugin: 'io.swagger.core.v3.swagger-gradle-plugin'
 apply plugin: 'com.google.cloud.tools.jib'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'se.thinkcode.cucumber-runner'
+apply plugin: 'io.freefair.lombok'
 
 check.dependsOn('cucumber')
 
@@ -64,6 +65,9 @@ task enhanceJPA(type: JavaExec) {
 }
 
 compileJava.finalizedBy enhanceJPA
+compileTestJava.dependsOn enhanceJPA
+classes.dependsOn enhanceJPA
+testClasses.dependsOn enhanceJPA
 
 // Configuration for Swagger documentation generation task
 task prepareInputYaml {
