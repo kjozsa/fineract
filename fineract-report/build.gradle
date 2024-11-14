@@ -19,7 +19,7 @@
 description = 'Fineract Report'
 
 apply plugin: 'java'
-apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
 
 compileJava.doLast {
     def mainSS = sourceSets.main
@@ -44,7 +44,14 @@ compileJava.doLast {
 // https://github.com/swagger-api/swagger-core/tree/master/modules/swagger-gradle-plugin
 import org.apache.tools.ant.filters.ReplaceTokens
 
-
+sourceSets {
+    main {
+        output.resourcesDir = file("${buildDir}/resources/main")
+    }
+    test {
+        output.resourcesDir = file("${buildDir}/resources/test")
+    }
+}
 
 configurations {
     providedRuntime // needed for Spring Boot executable WAR
@@ -78,22 +85,6 @@ modernizer {
         '.*domain.*'
     ]
 }
-
-// If we are running Gradle within Eclipse to enhance classes with OpenJPA,
-// set the classes directory to point to Eclipse's default build directory
-if (project.hasProperty('env') && project.getProperty('env') == 'eclipse') {
-    sourceSets.main.java.outputDir = new File(rootProject.projectDir, "fineract-report/bin/main")
-}
-
-eclipse {
-    project {
-        buildCommand([ LaunchConfigHandle: "<project>/.externalToolBuilders/OpenJPA Enhance Builder.launch" ],  'org.eclipse.ui.externaltools.ExternalToolBuilder')
-    }
-}
-
-/* http://stackoverflow.com/questions/19653311/jpa-repository-works-in-idea-and-production-but-not-in-gradle */
-sourceSets.main.output.resourcesDir = sourceSets.main.java.classesDirectory
-sourceSets.test.output.resourcesDir = sourceSets.test.java.classesDirectory
 
 if (!(project.hasProperty('env') && project.getProperty('env') == 'dev')) {
     sourceSets {

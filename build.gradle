@@ -94,7 +94,6 @@ plugins {
     id 'org.nosphere.apache.rat' version '0.8.1' apply false
     id 'com.github.hierynomus.license' version '0.16.1' apply false
     id 'com.github.jk1.dependency-license-report' version '2.9' apply false
-    id 'org.zeroturnaround.gradle.jrebel' version '1.2.0' apply false
     id 'org.springframework.boot' version '3.3.5' apply false
     id 'net.ltgt.errorprone' version '3.1.0' apply false
     id 'io.swagger.core.v3.swagger-gradle-plugin' version '2.2.23' apply false
@@ -321,9 +320,8 @@ configure(project.fineractJavaProjects) {
 
     apply plugin: 'java'
     apply plugin: 'idea'
-    apply plugin: 'eclipse'
-    apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
+    apply plugin: 'checkstyle'
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: 'com.github.spotbugs'
     apply plugin: 'com.github.andygoossens.modernizer'
@@ -403,43 +401,16 @@ configure(project.fineractJavaProjects) {
     // https://github.com/diffplug/spotless/tree/main/plugin-gradle
     spotless {
         java {
-            targetExclude '**/build/**', '**/bin/**', '**/out/**'
-            importOrder() //sort imports alphabetically
+            targetExclude "**/build/**"
+            importOrder()
             removeUnusedImports()
-            eclipse().configFile "$rootDir/config/fineractdev-formatter.xml"
-            endWithNewline()
+            indentWithSpaces(4)
             trimTrailingWhitespace()
-
-            // Enforce style modifier order
-            custom 'Modifier ordering', {
-                def modifierRanking = [
-                    public      : 1,
-                    protected   : 2,
-                    private     : 3,
-                    abstract    : 4,
-                    default     : 5,
-                    static      : 6,
-                    final       : 7,
-                    transient   : 8,
-                    volatile    : 9,
-                    synchronized: 10,
-                    native      : 11,
-                    strictfp    : 12]
-                // Find any instance of multiple modifiers. Lead with a non-word character to avoid
-                // accidental matching against for instance, "an alternative default value"
-                it.replaceAll(/\W(?:public |protected |private |abstract |default |static |final |transient |volatile |synchronized |native |strictfp ){2,}/, {
-                    // Do not replace the leading non-word character.  Identify the modifiers
-                    it.replaceAll(/(?:public |protected |private |abstract |default |static |final |transient |volatile |synchronized |native |strictfp ){2,}/, {
-                        // Sort the modifiers according to the ranking above
-                        it.split().sort({ modifierRanking[it] }).join(' ') + ' '
-                    }
-                    )
-                }
-                )
-            }
+            endWithNewline()
+            formatAnnotations()
+            licenseHeader '/**\n * Licensed to the Apache Software Foundation (ASF) under one\n * or more contributor license agreements. See the NOTICE file\n * distributed with this work for additional information\n * regarding copyright ownership. The ASF licenses this file\n * to you under the Apache License, Version 2.0 (the\n * "License"); you may not use this file except in compliance\n * with the License. You may obtain a copy of the License at\n *\n * http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing,\n * software distributed under the License is distributed on an\n * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n * KIND, either express or implied. See the License for the\n * specific language governing permissions and limitations\n * under the License.\n */'
+            configFile "$rootDir/config/fineractdev-formatter.xml"
         }
-
-        lineEndings 'UNIX'
     }
 
     // If we are running Gradle within Eclipse to enhance classes,

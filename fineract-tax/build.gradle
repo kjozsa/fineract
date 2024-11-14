@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-description = 'Fineract Taxes'
+description = 'Fineract Tax'
 
 apply plugin: 'java'
-apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
 
 compileJava.doLast {
     def mainSS = sourceSets.main
@@ -29,7 +29,7 @@ compileJava.doLast {
         into "${source}/META-INF/"
     }
     javaexec {
-        description = 'Performs EclipseLink static weaving of entity classes'
+        description = 'Performs static weaving of entity classes'
         def target = source
         main 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
         args '-persistenceinfo', source, source, target
@@ -40,11 +40,14 @@ compileJava.doLast {
     }
 }
 
-// Configuration for Swagger documentation generation task
-// https://github.com/swagger-api/swagger-core/tree/master/modules/swagger-gradle-plugin
-import org.apache.tools.ant.filters.ReplaceTokens
-
-
+sourceSets {
+    main {
+        output.resourcesDir = file("${buildDir}/resources/main")
+    }
+    test {
+        output.resourcesDir = file("${buildDir}/resources/test")
+    }
+}
 
 configurations {
     providedRuntime // needed for Spring Boot executable WAR
@@ -78,22 +81,6 @@ modernizer {
         '.*domain.*'
     ]
 }
-
-// If we are running Gradle within Eclipse to enhance classes with OpenJPA,
-// set the classes directory to point to Eclipse's default build directory
-if (project.hasProperty('env') && project.getProperty('env') == 'eclipse') {
-    sourceSets.main.java.outputDir = new File(rootProject.projectDir, "fineract-tax/bin/main")
-}
-
-eclipse {
-    project {
-        buildCommand([ LaunchConfigHandle: "<project>/.externalToolBuilders/OpenJPA Enhance Builder.launch" ],  'org.eclipse.ui.externaltools.ExternalToolBuilder')
-    }
-}
-
-/* http://stackoverflow.com/questions/19653311/jpa-repository-works-in-idea-and-production-but-not-in-gradle */
-sourceSets.main.output.resourcesDir = sourceSets.main.java.classesDirectory
-sourceSets.test.output.resourcesDir = sourceSets.test.java.classesDirectory
 
 if (!(project.hasProperty('env') && project.getProperty('env') == 'dev')) {
     sourceSets {

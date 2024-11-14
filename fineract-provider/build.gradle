@@ -18,9 +18,7 @@
  */
 description = 'Fineract Provider'
 
-apply plugin: 'org.zeroturnaround.gradle.jrebel'
 apply plugin: 'java'
-apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 apply plugin: 'io.swagger.core.v3.swagger-gradle-plugin'
@@ -30,36 +28,50 @@ apply plugin: 'se.thinkcode.cucumber-runner'
 
 check.dependsOn('cucumber')
 
-compileJava.doLast {
-    def mainSS = sourceSets.main
-    def source = mainSS.java.classesDirectory.get()
-    copy {
-        from file("src/main/resources/jpa/persistence.xml")
-        into "${source}/META-INF/"
+// Properly declare task for JPA enhancement
+task enhanceJPA(type: JavaExec) {
+    description = 'Performs static weaving of entity classes'
+    group = 'build'
+    
+    inputs.files(sourceSets.main.output.classesDirs)
+    outputs.dir(sourceSets.main.output.classesDirs)
+    
+    doFirst {
+        def source = sourceSets.main.java.classesDirectory.get()
+        copy {
+            from file("src/main/resources/jpa/persistence.xml")
+            into "${source}/META-INF/"
+        }
     }
-    javaexec {
-        description = 'Performs EclipseLink static weaving of entity classes'
-        def target = source
-        main 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
-        args '-persistenceinfo', source, source, target
-        classpath sourceSets.main.runtimeClasspath
-    }
-    delete {
-        delete "${source}/META-INF/persistence.xml"
+    
+    main = 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
+    def source = sourceSets.main.java.classesDirectory.get()
+    args = ['-persistenceinfo', source, source, source]
+    classpath = sourceSets.main.runtimeClasspath
+    
+    doLast {
+        delete {
+            delete "${source}/META-INF/persistence.xml"
+        }
     }
 }
 
+compileJava.finalizedBy enhanceJPA
+
 // Configuration for Swagger documentation generation task
-// https://github.com/swagger-api/swagger-core/tree/master/modules/swagger-gradle-plugin
-import org.apache.tools.ant.filters.ReplaceTokens
-
 task prepareInputYaml {
-    outputs.file("${buildDir}/tmp/swagger/fineract-input.yaml")
-
+    def inputFile = file("${projectDir}/config/swagger/fineract-input.yaml.template")
+    def outputFile = file("${buildDir}/tmp/swagger/fineract-input.yaml")
+    
+    inputs.file(inputFile)
+    inputs.property("version", project.version)
+    outputs.file(outputFile)
+    
     doLast {
+        outputFile.parentFile.mkdirs()
         copy {
-            from file("${projectDir}/config/swagger/fineract-input.yaml.template")
-            into file("${buildDir}/tmp/swagger")
+            from inputFile
+            into outputFile.parentFile
             rename { String filename -> return 'fineract-input.yaml' }
             filter(ReplaceTokens, tokens: [VERSION: "${project.version}".toString()])
         }
@@ -77,6 +89,25 @@ resolve {
     openApiFile = file("${buildDir}/tmp/swagger/fineract-input.yaml")
     sortOutput = true
     dependsOn(prepareInputYaml)
+    
+    inputs.files(sourceSets.main.runtimeClasspath)
+    inputs.file(openApiFile)
+    outputs.dir(outputDir)
+}
+
+// Use separate directories for resources to improve caching
+sourceSets {
+    main {
+        output.resourcesDir = file("${buildDir}/resources/main")
+    }
+    test {
+        output.resourcesDir = file("${buildDir}/resources/test")
+        java {
+            if (!(project.hasProperty('env') && project.getProperty('env') == 'dev')) {
+                exclude '**/core/boot/tests/**'
+            }
+        }
+    }
 }
 
 configurations {
@@ -110,32 +141,6 @@ modernizer {
         '.*EntityTables',
         '.*domain.*'
     ]
-}
-
-// If we are running Gradle within Eclipse to enhance classes with OpenJPA,
-// set the classes directory to point to Eclipse's default build directory
-if (project.hasProperty('env') && project.getProperty('env') == 'eclipse') {
-    sourceSets.main.java.outputDir = new File(rootProject.projectDir, "fineract-provider/bin/main")
-}
-
-eclipse {
-    project {
-        buildCommand([ LaunchConfigHandle: "<project>/.externalToolBuilders/OpenJPA Enhance Builder.launch" ],  'org.eclipse.ui.externaltools.ExternalToolBuilder')
-    }
-}
-
-/* http://stackoverflow.com/questions/19653311/jpa-repository-works-in-idea-and-production-but-not-in-gradle */
-sourceSets.main.output.resourcesDir = sourceSets.main.java.classesDirectory
-sourceSets.test.output.resourcesDir = sourceSets.test.java.classesDirectory
-
-if (!(project.hasProperty('env') && project.getProperty('env') == 'dev')) {
-    sourceSets {
-        test {
-            java {
-                exclude '**/core/boot/tests/**'
-            }
-        }
-    }
 }
 
 // Configuration for SQL tasks
