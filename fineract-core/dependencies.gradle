@@ -125,7 +125,32 @@ dependencies {
     }
     testImplementation ('org.mockito:mockito-inline')
     implementation('org.apache.avro:avro')
-    implementation(
-            project(path: ':fineract-avro-schemas')
-            )
+}
+
+// Force evaluation of avro-schemas first
+evaluationDependsOn(':fineract-avro-schemas')
+
+gradle.projectsEvaluated {
+    // Ensure Avro classes are generated before compilation
+    tasks.compileJava {
+        dependsOn(':fineract-avro-schemas:ensureAvroGenerated')
+        mustRunAfter(':fineract-avro-schemas:ensureAvroGenerated')
+        outputs.upToDateWhen { false }
+
+        doFirst {
+            // Double check that the required Avro class exists
+            def avroFile = project(':fineract-avro-schemas').layout.buildDirectory
+                    .file("generated-src/avro/main/org/apache/fineract/avro/BulkMessageItemV1.java")
+                    .get().asFile
+            if (!avroFile.exists()) {
+                throw new GradleException("Required Avro class BulkMessageItemV1.java not found at ${avroFile.absolutePath}. Build will fail.")
+            }
+        }
+    }
+
+    // Add explicit dependency on schema compilation
+    tasks.classes {
+        dependsOn(':fineract-avro-schemas:jar')
+        mustRunAfter(':fineract-avro-schemas:ensureAvroGenerated')
+    }
 }

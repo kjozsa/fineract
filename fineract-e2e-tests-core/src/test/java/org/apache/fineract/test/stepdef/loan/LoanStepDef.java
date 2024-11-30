@@ -22,6 +22,7 @@ import static org.apache.fineract.test.data.TransactionProcessingStrategyCode.AD
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -41,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -56,6 +58,7 @@ import org.apache.fineract.client.models.GetLoansLoanIdDelinquencySummary;
 import org.apache.fineract.client.models.GetLoansLoanIdLoanChargeData;
 import org.apache.fineract.client.models.GetLoansLoanIdLoanChargePaidByData;
 import org.apache.fineract.client.models.GetLoansLoanIdLoanTermVariations;
+import org.apache.fineract.client.models.GetLoansLoanIdLoanTransactionRelation;
 import org.apache.fineract.client.models.GetLoansLoanIdRepaymentPeriod;
 import org.apache.fineract.client.models.GetLoansLoanIdRepaymentSchedule;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
@@ -397,6 +400,302 @@ public class LoanStepDef extends AbstractStepDef {
     public void createFullyCustomizedLoanWithEmi(final DataTable table) throws IOException {
         final List<List<String>> data = table.asLists();
         createCustomizedLoan(data.get(1), true);
+    }
+
+    @When("Admin creates a fully customized loan with forced disabled downpayment with the following data:")
+    public void createFullyCustomizedLoanWithForcedDisabledDownpayment(DataTable table) throws IOException {
+        List<List<String>> data = table.asLists();
+        List<String> loanData = data.get(1);
+        String loanProduct = loanData.get(0);
+        String submitDate = loanData.get(1);
+        String principal = loanData.get(2);
+        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        String interestType = loanData.get(4);
+        String interestCalculationPeriod = loanData.get(5);
+        String amortizationType = loanData.get(6);
+        Integer loanTermFrequency = Integer.valueOf(loanData.get(7));
+        String loanTermFrequencyType = loanData.get(8);
+        Integer repaymentFrequency = Integer.valueOf(loanData.get(9));
+        String repaymentFrequencyType = loanData.get(10);
+        Integer numberOfRepayments = Integer.valueOf(loanData.get(11));
+        Integer graceOnPrincipalPayment = Integer.valueOf(loanData.get(12));
+        Integer graceOnInterestPayment = Integer.valueOf(loanData.get(13));
+        Integer graceOnInterestCharged = Integer.valueOf(loanData.get(14));
+        String transactionProcessingStrategyCode = loanData.get(15);
+
+        Response<PostClientsResponse> clientResponse = testContext().get(TestContextKey.CLIENT_CREATE_RESPONSE);
+        Long clientId = clientResponse.body().getClientId();
+
+        DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProduct);
+        Long loanProductId = loanProductResolver.resolve(product);
+
+        LoanTermFrequencyType termFrequencyType = LoanTermFrequencyType.valueOf(loanTermFrequencyType);
+        Integer loanTermFrequencyTypeValue = termFrequencyType.getValue();
+
+        RepaymentFrequencyType repaymentFrequencyType1 = RepaymentFrequencyType.valueOf(repaymentFrequencyType);
+        Integer repaymentFrequencyTypeValue = repaymentFrequencyType1.getValue();
+
+        InterestType interestType1 = InterestType.valueOf(interestType);
+        Integer interestTypeValue = interestType1.getValue();
+
+        InterestCalculationPeriodTime interestCalculationPeriod1 = InterestCalculationPeriodTime.valueOf(interestCalculationPeriod);
+        Integer interestCalculationPeriodValue = interestCalculationPeriod1.getValue();
+
+        AmortizationType amortizationType1 = AmortizationType.valueOf(amortizationType);
+        Integer amortizationTypeValue = amortizationType1.getValue();
+
+        TransactionProcessingStrategyCode processingStrategyCode = TransactionProcessingStrategyCode
+                .valueOf(transactionProcessingStrategyCode);
+        String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
+
+        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
+                .productId(loanProductId)//
+                .principal(new BigDecimal(principal))//
+                .interestRatePerPeriod(interestRate)//
+                .enableDownPayment(false)//
+                .interestType(interestTypeValue)//
+                .interestCalculationPeriodType(interestCalculationPeriodValue)//
+                .amortizationType(amortizationTypeValue)//
+                .loanTermFrequency(loanTermFrequency)//
+                .loanTermFrequencyType(loanTermFrequencyTypeValue)//
+                .numberOfRepayments(numberOfRepayments)//
+                .repaymentEvery(repaymentFrequency)//
+                .repaymentFrequencyType(repaymentFrequencyTypeValue)//
+                .submittedOnDate(submitDate)//
+                .expectedDisbursementDate(submitDate)//
+                .graceOnPrincipalPayment(graceOnPrincipalPayment)//
+                .graceOnInterestPayment(graceOnInterestPayment)//
+                .graceOnInterestPayment(graceOnInterestCharged).transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);//
+
+        Response<PostLoansResponse> response = loansApi.calculateLoanScheduleOrSubmitLoanApplication(loansRequest, "").execute();
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+
+        ErrorHelper.checkSuccessfulApiCall(response);
+        eventCheckHelper.createLoanEventCheck(response);
+    }
+
+    @Then("Admin fails to create a fully customized loan with forced enabled downpayment with the following data:")
+    public void createFullyCustomizedLoanWithForcedEnabledDownpayment(DataTable table) throws IOException {
+        List<List<String>> data = table.asLists();
+        List<String> loanData = data.get(1);
+        String loanProduct = loanData.get(0);
+        String submitDate = loanData.get(1);
+        String principal = loanData.get(2);
+        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        String interestType = loanData.get(4);
+        String interestCalculationPeriod = loanData.get(5);
+        String amortizationType = loanData.get(6);
+        Integer loanTermFrequency = Integer.valueOf(loanData.get(7));
+        String loanTermFrequencyType = loanData.get(8);
+        Integer repaymentFrequency = Integer.valueOf(loanData.get(9));
+        String repaymentFrequencyType = loanData.get(10);
+        Integer numberOfRepayments = Integer.valueOf(loanData.get(11));
+        Integer graceOnPrincipalPayment = Integer.valueOf(loanData.get(12));
+        Integer graceOnInterestPayment = Integer.valueOf(loanData.get(13));
+        Integer graceOnInterestCharged = Integer.valueOf(loanData.get(14));
+        String transactionProcessingStrategyCode = loanData.get(15);
+
+        Response<PostClientsResponse> clientResponse = testContext().get(TestContextKey.CLIENT_CREATE_RESPONSE);
+        Long clientId = clientResponse.body().getClientId();
+
+        DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProduct);
+        Long loanProductId = loanProductResolver.resolve(product);
+
+        LoanTermFrequencyType termFrequencyType = LoanTermFrequencyType.valueOf(loanTermFrequencyType);
+        Integer loanTermFrequencyTypeValue = termFrequencyType.getValue();
+
+        RepaymentFrequencyType repaymentFrequencyType1 = RepaymentFrequencyType.valueOf(repaymentFrequencyType);
+        Integer repaymentFrequencyTypeValue = repaymentFrequencyType1.getValue();
+
+        InterestType interestType1 = InterestType.valueOf(interestType);
+        Integer interestTypeValue = interestType1.getValue();
+
+        InterestCalculationPeriodTime interestCalculationPeriod1 = InterestCalculationPeriodTime.valueOf(interestCalculationPeriod);
+        Integer interestCalculationPeriodValue = interestCalculationPeriod1.getValue();
+
+        AmortizationType amortizationType1 = AmortizationType.valueOf(amortizationType);
+        Integer amortizationTypeValue = amortizationType1.getValue();
+
+        TransactionProcessingStrategyCode processingStrategyCode = TransactionProcessingStrategyCode
+                .valueOf(transactionProcessingStrategyCode);
+        String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
+
+        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
+                .productId(loanProductId)//
+                .principal(new BigDecimal(principal))//
+                .interestRatePerPeriod(interestRate)//
+                .enableDownPayment(true)//
+                .interestType(interestTypeValue)//
+                .interestCalculationPeriodType(interestCalculationPeriodValue)//
+                .amortizationType(amortizationTypeValue)//
+                .loanTermFrequency(loanTermFrequency)//
+                .loanTermFrequencyType(loanTermFrequencyTypeValue)//
+                .numberOfRepayments(numberOfRepayments)//
+                .repaymentEvery(repaymentFrequency)//
+                .repaymentFrequencyType(repaymentFrequencyTypeValue)//
+                .submittedOnDate(submitDate)//
+                .expectedDisbursementDate(submitDate)//
+                .graceOnPrincipalPayment(graceOnPrincipalPayment)//
+                .graceOnInterestPayment(graceOnInterestPayment)//
+                .graceOnInterestPayment(graceOnInterestCharged).transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);//
+
+        Response<PostLoansResponse> response = loansApi.calculateLoanScheduleOrSubmitLoanApplication(loansRequest, "").execute();
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+
+        ErrorResponse errorDetails = ErrorResponse.from(response);
+        Integer errorCode = errorDetails.getHttpStatusCode();
+        String errorMessage = errorDetails.getSingleError().getDeveloperMessage();
+        assertThat(errorCode).as(ErrorMessageHelper.dateFailureErrorCodeMsg()).isEqualTo(403);
+        assertThat(errorMessage).isEqualTo(ErrorMessageHelper.downpaymentDisabledOnProductErrorCodeMsg());
+
+        log.info("Error code: {}", errorCode);
+        log.info("Error message: {}}", errorMessage);
+    }
+
+    @When("Admin creates a fully customized loan with auto downpayment {double}% and with the following data:")
+    public void createFullyCustomizedLoanWithAutoDownpayment15(double percentage, DataTable table) throws IOException {
+        List<List<String>> data = table.asLists();
+        List<String> loanData = data.get(1);
+        String loanProduct = loanData.get(0);
+        String submitDate = loanData.get(1);
+        String principal = loanData.get(2);
+        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        String interestType = loanData.get(4);
+        String interestCalculationPeriod = loanData.get(5);
+        String amortizationType = loanData.get(6);
+        Integer loanTermFrequency = Integer.valueOf(loanData.get(7));
+        String loanTermFrequencyType = loanData.get(8);
+        Integer repaymentFrequency = Integer.valueOf(loanData.get(9));
+        String repaymentFrequencyType = loanData.get(10);
+        Integer numberOfRepayments = Integer.valueOf(loanData.get(11));
+        Integer graceOnPrincipalPayment = Integer.valueOf(loanData.get(12));
+        Integer graceOnInterestPayment = Integer.valueOf(loanData.get(13));
+        Integer graceOnInterestCharged = Integer.valueOf(loanData.get(14));
+        String transactionProcessingStrategyCode = loanData.get(15);
+
+        Response<PostClientsResponse> clientResponse = testContext().get(TestContextKey.CLIENT_CREATE_RESPONSE);
+        Long clientId = clientResponse.body().getClientId();
+
+        DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProduct);
+        Long loanProductId = loanProductResolver.resolve(product);
+
+        LoanTermFrequencyType termFrequencyType = LoanTermFrequencyType.valueOf(loanTermFrequencyType);
+        Integer loanTermFrequencyTypeValue = termFrequencyType.getValue();
+
+        RepaymentFrequencyType repaymentFrequencyType1 = RepaymentFrequencyType.valueOf(repaymentFrequencyType);
+        Integer repaymentFrequencyTypeValue = repaymentFrequencyType1.getValue();
+
+        InterestType interestType1 = InterestType.valueOf(interestType);
+        Integer interestTypeValue = interestType1.getValue();
+
+        InterestCalculationPeriodTime interestCalculationPeriod1 = InterestCalculationPeriodTime.valueOf(interestCalculationPeriod);
+        Integer interestCalculationPeriodValue = interestCalculationPeriod1.getValue();
+
+        AmortizationType amortizationType1 = AmortizationType.valueOf(amortizationType);
+        Integer amortizationTypeValue = amortizationType1.getValue();
+
+        TransactionProcessingStrategyCode processingStrategyCode = TransactionProcessingStrategyCode
+                .valueOf(transactionProcessingStrategyCode);
+        String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
+
+        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
+                .productId(loanProductId)//
+                .principal(new BigDecimal(principal))//
+                .interestRatePerPeriod(interestRate)//
+                .enableAutoRepaymentForDownPayment(true)//
+                .disbursedAmountPercentageForDownPayment(new BigDecimal(percentage))//
+                .interestType(interestTypeValue)//
+                .interestCalculationPeriodType(interestCalculationPeriodValue)//
+                .amortizationType(amortizationTypeValue)//
+                .loanTermFrequency(loanTermFrequency)//
+                .loanTermFrequencyType(loanTermFrequencyTypeValue)//
+                .numberOfRepayments(numberOfRepayments)//
+                .repaymentEvery(repaymentFrequency)//
+                .repaymentFrequencyType(repaymentFrequencyTypeValue)//
+                .submittedOnDate(submitDate)//
+                .expectedDisbursementDate(submitDate)//
+                .graceOnPrincipalPayment(graceOnPrincipalPayment)//
+                .graceOnInterestPayment(graceOnInterestPayment)//
+                .graceOnInterestPayment(graceOnInterestCharged).transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);//
+
+        Response<PostLoansResponse> response = loansApi.calculateLoanScheduleOrSubmitLoanApplication(loansRequest, "").execute();
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+
+        ErrorHelper.checkSuccessfulApiCall(response);
+        eventCheckHelper.createLoanEventCheck(response);
+    }
+
+    @When("Admin creates a fully customized loan with downpayment {double}%, NO auto downpayment, and with the following data:")
+    public void createFullyCustomizedLoanWithDownpayment15(double percentage, DataTable table) throws IOException {
+        List<List<String>> data = table.asLists();
+        List<String> loanData = data.get(1);
+        String loanProduct = loanData.get(0);
+        String submitDate = loanData.get(1);
+        String principal = loanData.get(2);
+        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        String interestType = loanData.get(4);
+        String interestCalculationPeriod = loanData.get(5);
+        String amortizationType = loanData.get(6);
+        Integer loanTermFrequency = Integer.valueOf(loanData.get(7));
+        String loanTermFrequencyType = loanData.get(8);
+        Integer repaymentFrequency = Integer.valueOf(loanData.get(9));
+        String repaymentFrequencyType = loanData.get(10);
+        Integer numberOfRepayments = Integer.valueOf(loanData.get(11));
+        Integer graceOnPrincipalPayment = Integer.valueOf(loanData.get(12));
+        Integer graceOnInterestPayment = Integer.valueOf(loanData.get(13));
+        Integer graceOnInterestCharged = Integer.valueOf(loanData.get(14));
+        String transactionProcessingStrategyCode = loanData.get(15);
+
+        Response<PostClientsResponse> clientResponse = testContext().get(TestContextKey.CLIENT_CREATE_RESPONSE);
+        Long clientId = clientResponse.body().getClientId();
+
+        DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProduct);
+        Long loanProductId = loanProductResolver.resolve(product);
+
+        LoanTermFrequencyType termFrequencyType = LoanTermFrequencyType.valueOf(loanTermFrequencyType);
+        Integer loanTermFrequencyTypeValue = termFrequencyType.getValue();
+
+        RepaymentFrequencyType repaymentFrequencyType1 = RepaymentFrequencyType.valueOf(repaymentFrequencyType);
+        Integer repaymentFrequencyTypeValue = repaymentFrequencyType1.getValue();
+
+        InterestType interestType1 = InterestType.valueOf(interestType);
+        Integer interestTypeValue = interestType1.getValue();
+
+        InterestCalculationPeriodTime interestCalculationPeriod1 = InterestCalculationPeriodTime.valueOf(interestCalculationPeriod);
+        Integer interestCalculationPeriodValue = interestCalculationPeriod1.getValue();
+
+        AmortizationType amortizationType1 = AmortizationType.valueOf(amortizationType);
+        Integer amortizationTypeValue = amortizationType1.getValue();
+
+        TransactionProcessingStrategyCode processingStrategyCode = TransactionProcessingStrategyCode
+                .valueOf(transactionProcessingStrategyCode);
+        String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
+
+        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
+                .productId(loanProductId)//
+                .principal(new BigDecimal(principal))//
+                .interestRatePerPeriod(interestRate)//
+                .enableAutoRepaymentForDownPayment(false)//
+                .disbursedAmountPercentageForDownPayment(new BigDecimal(percentage))//
+                .interestType(interestTypeValue)//
+                .interestCalculationPeriodType(interestCalculationPeriodValue)//
+                .amortizationType(amortizationTypeValue)//
+                .loanTermFrequency(loanTermFrequency)//
+                .loanTermFrequencyType(loanTermFrequencyTypeValue)//
+                .numberOfRepayments(numberOfRepayments)//
+                .repaymentEvery(repaymentFrequency)//
+                .repaymentFrequencyType(repaymentFrequencyTypeValue)//
+                .submittedOnDate(submitDate)//
+                .expectedDisbursementDate(submitDate)//
+                .graceOnPrincipalPayment(graceOnPrincipalPayment)//
+                .graceOnInterestPayment(graceOnInterestPayment)//
+                .graceOnInterestPayment(graceOnInterestCharged).transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);//
+
+        Response<PostLoansResponse> response = loansApi.calculateLoanScheduleOrSubmitLoanApplication(loansRequest, "").execute();
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+
+        ErrorHelper.checkSuccessfulApiCall(response);
+        eventCheckHelper.createLoanEventCheck(response);
     }
 
     @When("Admin creates a fully customized loan with fixed length {int} and with the following data:")
@@ -2200,6 +2499,29 @@ public class LoanStepDef extends AbstractStepDef {
                     assertThat(linesActual).as(ErrorMessageHelper.wrongNumberOfLinesInLoanTermVariations(linesActual, linesExpected))
                             .isEqualTo(linesExpected);
                 });
+    }
+
+    @Then("In Loan Transactions the {string}th Transaction has relationship type={} with the {string}th Transaction")
+    public void loanTransactionsRelationshipCheck(String nthTransactionFromStr, String relationshipType, String nthTransactionToStr)
+            throws IOException {
+        final Response<PostLoansResponse> loanCreateResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final long loanId = loanCreateResponse.body().getLoanId();
+
+        final Response<GetLoansLoanIdResponse> loanDetailsResponse = loansApi.retrieveLoan(loanId, false, "transactions", "", "").execute();
+        ErrorHelper.checkSuccessfulApiCall(loanDetailsResponse);
+
+        final List<GetLoansLoanIdTransactions> transactions = loanDetailsResponse.body().getTransactions();
+        final int nthTransactionFrom = nthTransactionFromStr == null ? transactions.size() - 1
+                : Integer.parseInt(nthTransactionFromStr) - 1;
+        final int nthTransactionTo = nthTransactionToStr == null ? transactions.size() - 1 : Integer.parseInt(nthTransactionToStr) - 1;
+        final GetLoansLoanIdTransactions transactionFrom = transactions.get(nthTransactionFrom);
+        final GetLoansLoanIdTransactions transactionTo = transactions.get(nthTransactionTo);
+
+        final Optional<GetLoansLoanIdLoanTransactionRelation> relationshipOptional = transactionFrom.getTransactionRelations().stream()
+                .filter(r -> r.getRelationType().equals(relationshipType))
+                .filter(r -> r.getToLoanTransaction().equals(transactionTo.getId())).findFirst();
+
+        assertTrue(relationshipOptional.isPresent(), "Missed relationship between transactions");
     }
 
     private void createCustomizedLoan(final List<String> loanData, final boolean withEmi) throws IOException {

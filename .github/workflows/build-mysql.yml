@@ -54,8 +54,8 @@ jobs:
             done
       - name: Initialise databases
         run: |
-            ./gradlew --no-daemon -q createMySQLDB -PdbName=fineract_tenants
-            ./gradlew --no-daemon -q createMySQLDB -PdbName=fineract_default
+            mysql -h 127.0.0.1 -P 3306 -u root -pmysql -e "CREATE DATABASE IF NOT EXISTS fineract_tenants CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            mysql -h 127.0.0.1 -P 3306 -u root -pmysql -e "CREATE DATABASE IF NOT EXISTS fineract_default CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
       - name: Start LocalStack
         env:
           AWS_ENDPOINT_URL: http://localhost:4566
