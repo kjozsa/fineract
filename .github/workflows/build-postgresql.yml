@@ -55,8 +55,8 @@ jobs:
             done
       - name: Initialise databases
         run: |
-            ./gradlew --no-daemon -q createPGDB -PdbName=fineract_tenants
-            ./gradlew --no-daemon -q createPGDB -PdbName=fineract_default
+            PGPASSWORD=postgres psql -h 127.0.0.1 -U root -d postgres -c "CREATE DATABASE fineract_tenants WITH OWNER = root ENCODING = 'UTF8' CONNECTION LIMIT = -1;"
+            PGPASSWORD=postgres psql -h 127.0.0.1 -U root -d postgres -c "CREATE DATABASE fineract_default WITH OWNER = root ENCODING = 'UTF8' CONNECTION LIMIT = -1;"
       - name: Start LocalStack
         env:
           AWS_ENDPOINT_URL: http://localhost:4566

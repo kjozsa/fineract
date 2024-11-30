@@ -24,6 +24,7 @@ plugins {
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'io.freefair.lombok'
 
 repositories {
     mavenCentral()

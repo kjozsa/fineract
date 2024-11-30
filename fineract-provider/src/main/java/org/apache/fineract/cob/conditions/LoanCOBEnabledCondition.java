@@ -25,6 +25,6 @@ public class LoanCOBEnabledCondition extends PropertiesCondition {
 
     @Override
     protected boolean matches(FineractProperties properties) {
-        return properties.getJob().isLoanCobEnabled();
+        return properties.getJob() != null && properties.getJob().isLoanCobEnabled();
     }
 }

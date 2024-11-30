@@ -21,6 +21,8 @@ plugins {
     id 'java'
 }
 
+apply plugin: 'io.freefair.lombok'
+
 repositories {
     mavenCentral()
 }
