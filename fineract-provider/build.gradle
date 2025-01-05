@@ -30,23 +30,123 @@ apply plugin: 'se.thinkcode.cucumber-runner'
 
 check.dependsOn('cucumber')
 
-compileJava.doLast {
-    def mainSS = sourceSets.main
-    def source = mainSS.java.classesDirectory.get()
-    copy {
-        from file("src/main/resources/jpa/persistence.xml")
-        into "${source}/META-INF/"
+// Define a separate task for static weaving
+def staticWeaveTask = tasks.register('staticWeave') {
+    description = 'Performs EclipseLink static weaving of entity classes'
+    
+    def weaveDir = layout.buildDirectory.dir('classes/java/weaved').get().asFile
+    def classesDir = layout.buildDirectory.dir('classes/java/main').get().asFile
+    def testClassesDir = layout.buildDirectory.dir('classes/java/test').get().asFile
+    def persistenceFile = file("src/main/resources/jpa/persistence.xml")
+    
+    inputs.files(sourceSets.main.java.classesDirectory, sourceSets.test.java.classesDirectory)
+        .withPropertyName("classFiles")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(persistenceFile)
+        .withPropertyName("persistenceXml")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property("javaVersion", System.getProperty("java.version"))
+    
+    outputs.dir(weaveDir)
+        .withPropertyName("weavedClasses")
+    
+    // Enable caching for this task
+    outputs.cacheIf { true }
+    
+    // Use mustRunAfter instead of dependsOn to avoid circular dependencies
+    mustRunAfter 'compileJava', 'compileTestJava', 'processResources', 'processTestResources', 'generateGitProperties', 'resolve'
+    
+    doLast {
+        // Create weave directory
+        weaveDir.mkdirs()
+        
+        // Copy all class files to weave directory
+        copy {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            from classesDir
+            from testClassesDir
+            into weaveDir
+        }
+        
+        // Copy persistence.xml
+        copy {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            from persistenceFile
+            into "${weaveDir}/META-INF/"
+        }
+        
+        // Perform static weaving
+        javaexec {
+            description = 'Performs EclipseLink static weaving of entity classes'
+            mainClass = 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
+            args '-persistenceinfo', weaveDir, weaveDir, weaveDir
+            classpath sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+        }
+        
+        // Clean up persistence.xml
+        delete("${weaveDir}/META-INF/persistence.xml")
+        
+        // Copy weaved classes back to respective directories
+        copy {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            from weaveDir
+            into classesDir
+            include '**/*.class'
+            exclude 'org/apache/fineract/**/test/**'
+        }
+        
+        copy {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            from weaveDir
+            into testClassesDir
+            include 'org/apache/fineract/**/test/**/*.class'
+        }
     }
-    javaexec {
-        description = 'Performs EclipseLink static weaving of entity classes'
-        def target = source
-        main 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
-        args '-persistenceinfo', source, source, target
-        classpath sourceSets.main.runtimeClasspath
+}
+
+// Configure classes task
+tasks.named('classes') {
+    finalizedBy staticWeave
+}
+
+// Configure test classes task
+tasks.named('testClasses') {
+    finalizedBy staticWeave
+}
+
+// Make sure resolve task runs before static weaving
+tasks.named('staticWeave') {
+    dependsOn 'resolve'
+}
+
+// Configure proper output directories for main and test
+sourceSets {
+    main {
+        java {
+            destinationDirectory = layout.buildDirectory.dir('classes/java/main').get().asFile
+        }
+        resources {
+            destinationDirectory = layout.buildDirectory.dir('resources/main').get().asFile
+        }
     }
-    delete {
-        delete "${source}/META-INF/persistence.xml"
+    test {
+        java {
+            destinationDirectory = layout.buildDirectory.dir('classes/java/test').get().asFile
+        }
+        resources {
+            destinationDirectory = layout.buildDirectory.dir('resources/test').get().asFile
+        }
     }
+}
+
+// Configure the compile task
+tasks.named('compileJava') {
+    // Ensure proper output tracking
+    outputs.cacheIf { true }
+    outputs.dir(sourceSets.main.java.destinationDirectory)
+    
+    // Remove any overlapping outputs configuration
+    outputs.doNotCacheIf("Has no overlapping outputs") { false }
 }
 
 // Configuration for Swagger documentation generation task
@@ -82,6 +182,11 @@ resolve {
 configurations {
     providedRuntime // needed for Spring Boot executable WAR
     providedCompile
+    implementation
+    testImplementation
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
     compile() {
         exclude module: 'hibernate-entitymanager'
         exclude module: 'hibernate-validator'
@@ -98,6 +203,16 @@ configurations {
         exclude module: 'classworlds'
     }
     runtime
+}
+
+dependencies {
+    implementation project(':fineract-core')
+    implementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.mockito:mockito-core'
+    implementation 'org.mockito:mockito-junit-jupiter'
+    implementation 'org.junit.jupiter:junit-jupiter-api'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.liquibase:liquibase-core'
 }
 
 apply from: 'dependencies.gradle'
@@ -318,17 +433,28 @@ task migrateDatabase {
 
 cucumber {
     tags = 'not @ignore'
-    main = 'io.cucumber.core.cli.Main'
     shorten = 'argfile'
     plugin = [
         'pretty',
         'html:build/reports/cucumber/report.html',
-        'json:build/reports/cucumber/report.json',
-        'junit:build/reports/cucumber/report.xml'
+        'json:build/reports/cucumber/report.json'
     ]
 }
 
-tasks.jibDockerBuild.dependsOn(bootJar)
+tasks.cucumber {
+    doLast {
+        javaexec {
+            mainClass = 'io.cucumber.core.cli.Main'
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                '--plugin', 'pretty',
+                '--plugin', "html:${buildDir}/reports/cucumber/report.html",
+                '--plugin', "json:${buildDir}/reports/cucumber/report.json",
+                '--tags', 'not @ignore'
+            ]
+        }
+    }
+}
 
 // Configuration for git properties gradle plugin
 // https://github.com/n0mer/gradle-git-properties
@@ -352,3 +478,40 @@ spotbugsTest.dependsOn resolve
 compileTestJava.dependsOn ':fineract-client:processResources', ':fineract-avro-schemas:processResources'
 resolveMainClassName.dependsOn resolve
 processResources.dependsOn compileJava
+
+javadoc {
+    dependsOn resolve
+}
+
+task devRun(type: org.springframework.boot.gradle.tasks.run.BootRun) {
+    description = 'Runs the application quickly for development by skipping quality checks'
+    group = 'Application'
+
+    // Configure the build to skip quality checks
+    gradle.taskGraph.whenReady { graph ->
+        if (graph.hasTask(devRun)) {
+            tasks.matching { task -> 
+                task.name in ['checkstyle', 'checkstyleMain', 'checkstyleTest',
+                            'spotlessCheck', 'spotlessApply',
+                            'spotbugsMain', 'spotbugsTest',
+                            'javadoc', 'javadocJar',
+                            'modernizer']
+            }.configureEach {
+                enabled = false
+            }
+            // Also disable error prone compilation flags
+            tasks.withType(JavaCompile).configureEach {
+                options.errorprone.enabled = false
+            }
+        }
+    }
+
+    // Inherit all bootRun settings
+    classpath = bootRun.classpath
+    mainClass = bootRun.mainClass
+    jvmArgs = bootRun.jvmArgs
+    
+    doFirst {
+        println "Running in development mode - quality checks are disabled"
+    }
+}

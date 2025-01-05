@@ -78,12 +78,27 @@ tasks.named('cucumber').get().dependsOn 'spotlessCheck'
 
 cucumber {
     tags = 'not @ignore'
-    main = 'io.cucumber.core.cli.Main'
     shorten = 'argfile'
     plugin = [
         'pretty',
-        'io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm'
+        'html:build/reports/cucumber/report.html',
+        'json:build/reports/cucumber/report.json'
     ]
+}
+
+tasks.cucumber {
+    doLast {
+        javaexec {
+            mainClass = 'io.cucumber.core.cli.Main'
+            classpath = configurations.cucumber + sourceSets.main.output + sourceSets.test.output
+            args = [
+                '--plugin', 'pretty',
+                '--plugin', "html:${buildDir}/reports/cucumber/report.html",
+                '--plugin', "json:${buildDir}/reports/cucumber/report.json",
+                '--tags', 'not @ignore'
+            ]
+        }
+    }
 }
 
 allure {
